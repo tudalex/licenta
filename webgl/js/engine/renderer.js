@@ -1,6 +1,7 @@
 /**
  * Created by tudalex on 07.03.2014.
  */
+"use strict";
 
 function AssimpScene(data, gl) {
     "use strict";
@@ -13,7 +14,7 @@ function AssimpScene(data, gl) {
 AssimpScene.prototype.init = function() {
     "use strict";
     var gl = this.gl;
-    var i, mesh;
+    var i, j, mesh, material, key;
     for (i in this.data.meshes) {
         mesh = this.data.meshes[i];
         mesh.vertexBuffer = gl.createBuffer();
@@ -26,7 +27,28 @@ AssimpScene.prototype.init = function() {
         gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, mesh.indexBuffer);
         gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, new Uint16Array(mesh.indexes), gl.STATIC_DRAW);
 
+        mesh.normalBuffer = gl.createBuffer();
+        gl.bindBuffer(gl.ARRAY_BUFFER, mesh.normalBuffer);
+        gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(mesh.normals), gl.STATIC_DRAW);
     }
+
+    for (i in this.data.materials) {
+        material = this.data.materials[i];
+        material.mat = {};
+        material.tex = {};
+        material.clr = {};
+        for (j in material.properties) {
+            key = material.properties[j].key.slice(1).split('.');
+            //console.log(key);
+            material[key[0]][key[1]] = material.properties[j].value;
+        }
+//        for (j in material.clr) {
+//            console.log(j);
+//            //gl.
+//        }
+        delete material.properties;
+    }
+    console.dir(this);
 };
 
 
@@ -34,8 +56,13 @@ AssimpScene.prototype.drawMesh = function(idx, shaderProgram) {
     "use strict";
     var gl = this.gl;
     var mesh = this.data.meshes[idx];
+    var material = this.data.materials[mesh.materialindex];
     gl.bindBuffer(gl.ARRAY_BUFFER, mesh.vertexBuffer);
     gl.vertexAttribPointer(shaderProgram.vertexPositionAttribute, 3, gl.FLOAT, false, 0, 0);
+
+    gl.bindBuffer(gl.ARRAY_BUFFER, mesh.normalBuffer);
+    gl.vertexAttribPointer(shaderProgram.normalAttribute, 3, gl.FLOAT, false, 0, 0);
+
     gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, mesh.indexBuffer);
     gl.drawElements(gl.TRIANGLES, mesh.indexes.length, gl.UNSIGNED_SHORT, 0);
 
@@ -70,9 +97,7 @@ AssimpScene.prototype.draw = function(shaderProgram, mvMatrix, node ) {
             this.draw(shaderProgram, mat4.clone(mvMatrix), node.children[i]);
 
     }
-
-
-}
+};
 
 
 
@@ -101,12 +126,9 @@ function Renderer(canvas_id, stats, engine) {
 
     this.initShaders();
     this.gl.clearColor(0.0, 0.0, 0.0, 1.0);
+    this.initFB();
 
-    this.manager.loadObject('sponza.json', function(data, type) {
-        this.currScene = new AssimpScene(data, this.gl);
-        console.log(type);
-    }.bind(this));
-
+    
 
     mat4.perspective(this.pMatrix,45, this.gl.canvas.width/this.gl.canvas.height, 0.1, 10000.0);
     mat4.identity(this.mvMatrix);
@@ -116,9 +138,6 @@ function Renderer(canvas_id, stats, engine) {
     this.gl.enable(this.gl.DEPTH_TEST);
 
     this.currCamera = new Camera(engine);
-
-
-    this.drawScene();
 
     console.dir( this.gl.getSupportedExtensions());
     //setInterval(this.drawScene.bind(this), 1000/60);
@@ -138,15 +157,20 @@ Renderer.prototype.initGL = function(canvas) {
         console.log("gl." + functionName + "(" +
             WebGLDebugUtils.glFunctionArgsToString(functionName, args) + ")");
     }
-    //this.gl = WebGLDebugUtils.makeDebugContext(this.rawgl, undefined, logGLCall);
-    //this.gl = WebGLDebugUtils.makeDebugContext(this.rawgl);
+//    this.gl = WebGLDebugUtils.makeDebugContext(this.rawgl, undefined, logGLCall);
+//    this.gl = WebGLDebugUtils.makeDebugContext(this.rawgl);
     this.gl = this.rawgl;
+
+    this.extDepth = this.gl.getExtension("WEBGL_depth_texture");
+    this.extDraw = this.gl.getExtension("WEBGL_draw_buffers");
+    this.extFloat = this.gl.getExtension("OES_texture_float");
 };
 
 
 Renderer.prototype.initShaders = function() {
     "use strict";
-    function getShader(gl, id) {
+    var gl = this.gl;
+    function getShader(id) {
         "use strict";
         var shaderScript, theSource, currentChild, shader;
 
@@ -181,44 +205,70 @@ Renderer.prototype.initShaders = function() {
 
         // See if it compiled successfully
         if (!gl.getShaderParameter(shader, gl.COMPILE_STATUS)) {
+            console.log(theSource);
             alert("An error occurred compiling the shaders: " + gl.getShaderInfoLog(shader));
+
             return null;
         }
 
         return shader;
     }
 
+    function createProgram(vertexShaderName, fragmentShaderName) {
+        var shaderProgram = gl.createProgram();
+        var fragmentShader = getShader(fragmentShaderName);
+        var vertexShader = getShader(vertexShaderName);
 
+        gl.attachShader(shaderProgram, vertexShader);
 
+        gl.attachShader(shaderProgram, fragmentShader);
 
-    var fragmentShader = getShader(this.gl, "shader-fs");
-    var vertexShader = getShader(this.gl, "shader-vs");
+        gl.linkProgram(shaderProgram);
 
-
-    var shaderProgram = this.gl.createProgram();
-    this.gl.attachShader(shaderProgram, vertexShader);
-    this.gl.attachShader(shaderProgram, fragmentShader);
-
-    this.gl.linkProgram(shaderProgram);
-
-    if (!this.gl.getProgramParameter(shaderProgram, this.gl.LINK_STATUS)) {
-        console.error("Unable to initialize the shader program.");
+        if (!gl.getProgramParameter(shaderProgram, gl.LINK_STATUS)) {
+            console.error("Unable to initialize the shader program.");
+        }
+        return shaderProgram;
     }
+
+    var shaderProgram = createProgram("shader-vs", "shader-fs");
+    var lastProgram = createProgram("last-vs", "last-fs");
 
     this.gl.useProgram(shaderProgram);
 
-    shaderProgram.vertexPositionAttribute = this.gl.getAttribLocation(shaderProgram, "aVertexPosition");
-    this.gl.enableVertexAttribArray(shaderProgram.vertexPositionAttribute);
+    var shaders = [shaderProgram, lastProgram];
+    var i, cShader;
+    for (i = 0; i < shaders.length; ++i) {
+        cShader = shaders[i];
+        cShader.vertexPositionAttribute = this.gl.getAttribLocation(cShader, "aVertexPosition");
+        cShader.normalAttribute = this.gl.getAttribLocation(cShader, "aNormal");
+        this.gl.enableVertexAttribArray(cShader.vertexPositionAttribute);
+        this.gl.enableVertexAttribArray(cShader.normalAttribute);
 
-    shaderProgram.pMatrixUniform = this.gl.getUniformLocation(shaderProgram, "uPMatrix");
-    shaderProgram.mvMatrixUniform = this.gl.getUniformLocation(shaderProgram, "uMVMatrix");
-    shaderProgram.lookat = this.gl.getUniformLocation(shaderProgram, "uLookAt");
+        cShader.pMatrixUniform = this.gl.getUniformLocation(cShader, "uPMatrix");
+        cShader.mvMatrixUniform = this.gl.getUniformLocation(cShader, "uMVMatrix");
+        cShader.lookat = this.gl.getUniformLocation(cShader, "uLookAt");
 
+    }
 
+    this.shaders = shaders;
     this.shaderProgram = shaderProgram;
 };
 
-
+Renderer.prototype.initFB = function() {
+    "use strict";
+    var gl = this.gl;
+    var i;
+    this.fbo = gl.createFramebuffer();
+    this.intermediate = this.createFBTexture(gl.RGBA, gl.UNSIGNED_BYTE);
+    this.depthText = this.createFBTexture(gl.DEPTH_STENCIL, this.extDepth.UNSIGNED_INT_24_8_WEBGL);
+    this.depthPrec = this.createFBTexture(gl.RGBA, gl.FLOAT);
+    this.normal = this.createFBTexture(gl.RGBA, gl.FLOAT);
+    this.bufs = [];
+    for (i = 0; i < 4; ++i) {
+        this.bufs[i] = this.extDraw.COLOR_ATTACHMENT0_WEBGL+i;
+    }
+};
 
 Renderer.prototype.drawBuffer = function(buffer) {
     "use strict";
@@ -231,6 +281,7 @@ Renderer.prototype.setMatrixUniform = function() {
     gl.uniformMatrix4fv(this.shaderProgram.pMatrixUniform, false, this.pMatrix);
     gl.uniformMatrix4fv(this.shaderProgram.mvMatrixUniform, false, this.mvMatrix);
     gl.uniformMatrix4fv(this.shaderProgram.lookat, false, this.lookatMatrix);
+    gl.uniform2fv(gl.getUniformLocation(this.shaderProgram, 'resolution'), [gl.canvas.width, gl.canvas.height]);
 };
 
 Renderer.prototype.renderObject = function() {
@@ -238,13 +289,62 @@ Renderer.prototype.renderObject = function() {
 
 };
 
+Renderer.prototype.createFBTexture = function(type, size, type2) {
+    "use strict";
+    var gl = this.gl;
+    var texture = gl.createTexture();
+    if (!type2)
+        type2 = type;
+    gl.bindTexture(gl.TEXTURE_2D, texture);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
+    gl.texImage2D(gl.TEXTURE_2D, 0, type, gl.canvas.width, gl.canvas.height, 0, type2, size, null);
+    return texture;
+};
+
+Renderer.prototype.drawFullScreenQuad = function () {
+    "use strict";
+    var gl = this.gl;
+    if (!this.quad_vertex_buffer) {
+        this.quad_vertex_buffer = gl.createBuffer();
+        var quad_vertex_buffer_data = new Float32Array([
+            -1.0, -1.0, 0.0,
+            1.0, -1.0, 0.0,
+            -1.0,  1.0, 0.0,
+            -1.0,  1.0, 0.0,
+            1.0, -1.0, 0.0,
+            1.0,  1.0, 0.0]);
+        gl.bindBuffer(gl.ARRAY_BUFFER, this.quad_vertex_buffer);
+        gl.bufferData(gl.ARRAY_BUFFER, quad_vertex_buffer_data, gl.STATIC_DRAW);
+    }
+
+    var quad_vertex_buffer = this.quad_vertex_buffer;
+
+    gl.bindBuffer(gl.ARRAY_BUFFER, quad_vertex_buffer);
+    gl.vertexAttribPointer(this.shaderProgram.vertexPositionAttribute, 3, gl.FLOAT, false, 0, 0);
+    //gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, null);
+    gl.drawArrays(gl.TRIANGLES,0, 6);
+};
 Renderer.prototype.drawScene = function() {
     "use strict";
 
     var gl = this.gl;
-    if (this.stats)
-        this.stats.begin();
 
+    
+    gl.enable(gl.DEPTH_TEST);
+    this.shaderProgram = this.shaders[0];
+    gl.useProgram(this.shaderProgram);
+
+
+    gl.bindFramebuffer(gl.FRAMEBUFFER, this.fbo);
+    this.extDraw.drawBuffersWEBGL(this.bufs);
+
+    gl.framebufferTexture2D(gl.FRAMEBUFFER, this.bufs[0], gl.TEXTURE_2D, this.intermediate, 0);
+    gl.framebufferTexture2D(gl.FRAMEBUFFER, this.bufs[1], gl.TEXTURE_2D, this.depthPrec, 0);
+    gl.framebufferTexture2D(gl.FRAMEBUFFER, this.bufs[2], gl.TEXTURE_2D, this.normal, 0);
+    gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.DEPTH_STENCIL_ATTACHMENT, gl.TEXTURE_2D, this.depthText, 0);
     gl.viewport(0, 0, gl.canvas.width, gl.canvas.height);
     gl.clear(this.gl.COLOR_BUFFER_BIT | this.gl.DEPTH_BUFFER_BIT);
 
@@ -253,11 +353,34 @@ Renderer.prototype.drawScene = function() {
 
     this.setMatrixUniform();
 
+
+
     this.currScene.draw(this.shaderProgram, mat4.clone(this.mvMatrix));
 
-    if (this.stats) {
-        this.stats.end();
-    }
+    this.shaderProgram = this.shaders[1];
+    gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+    gl.disable(gl.DEPTH_TEST);
+    gl.clear(this.gl.COLOR_BUFFER_BIT | this.gl.DEPTH_BUFFER_BIT);
 
-    window.requestAnimationFrame(this.drawScene.bind(this));
+    gl.useProgram(this.shaderProgram);
+    gl.activeTexture(gl.TEXTURE0);
+    gl.bindTexture(gl.TEXTURE_2D, this.intermediate);
+
+    gl.activeTexture(gl.TEXTURE1);
+    gl.bindTexture(gl.TEXTURE_2D, this.depthText);
+
+    gl.activeTexture(gl.TEXTURE2);
+    gl.bindTexture(gl.TEXTURE_2D, this.depthPrec);
+
+    gl.activeTexture(gl.TEXTURE3);
+    gl.bindTexture(gl.TEXTURE_2D, this.normal);
+    var i;
+    for (i = 0; i < 4; ++i)
+        gl.uniform1i(gl.getUniformLocation(this.shaderProgram, "uSampler"+i), i);
+    //gl.uniform1i(gl.getUniformLocation(this.shaderProgram, "uSampler1"), 1);
+
+    this.setMatrixUniform();
+
+    this.drawFullScreenQuad();
+
 };

@@ -5,7 +5,7 @@
 ResourceManager = function() {
     "use strict";
 
-}
+};
 
 ResourceManager.prototype.load = function(url, callback, type) {
     "use strict";
@@ -14,11 +14,9 @@ ResourceManager.prototype.load = function(url, callback, type) {
     req.open("GET", url, false);
     req.onload = function (data) {
         callback(req.response, req.responseType);
-    }
+    };
     req.send();
-
-
-}
+};
 
 ResourceManager.prototype.loadObject = function(url, callback) {
     "use strict";
@@ -27,5 +25,5 @@ ResourceManager.prototype.loadObject = function(url, callback) {
         data = JSON.parse(data);
         callback(data, type);
     }, 'JSON');
-}
+};
 

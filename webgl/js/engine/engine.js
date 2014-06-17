@@ -19,3 +19,27 @@ Engine.prototype.initStats = function() {
     return stats;
 };
 
+Engine.prototype.loadScene = function(scene) {
+    "use strict";
+    this.renderer.manager.loadObject(scene, function (data, type) {
+        this.renderer.currScene = new AssimpScene(data, this.renderer.gl);
+        console.log(type);
+        this.mainLoop();
+    }.bind(this));
+};
+
+Engine.prototype.mainLoop = function() {
+    "use strict";
+    if (this.stats)
+        this.stats.begin();
+
+
+    this.renderer.drawScene();
+    
+    
+    if (this.stats) {
+        this.stats.end();
+    }
+
+    window.requestAnimationFrame(this.mainLoop.bind(this), this.renderer.canvas);
+};
