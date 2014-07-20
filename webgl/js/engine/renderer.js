@@ -1,7 +1,6 @@
 /**
  * Created by tudalex on 07.03.2014.
  */
-"use strict";
 
 function AssimpScene(data, gl) {
     "use strict";
@@ -53,7 +52,6 @@ AssimpScene.prototype.init = function() {
 
 
 AssimpScene.prototype.drawMesh = function(idx, shaderProgram) {
-    "use strict";
     var gl = this.gl;
     var mesh = this.data.meshes[idx];
     var material = this.data.materials[mesh.materialindex];
@@ -68,9 +66,8 @@ AssimpScene.prototype.drawMesh = function(idx, shaderProgram) {
 
 };
 
-AssimpScene.prototype.draw = function(shaderProgram, mvMatrix, node ) {
+AssimpScene.prototype.draw = function(shaderProgram, mvMatrix, node) {
     "use strict";
-
     var i;
     var temp = mat4.create();
 
@@ -83,7 +80,7 @@ AssimpScene.prototype.draw = function(shaderProgram, mvMatrix, node ) {
         node = this.data.rootnode;
     else {
         mat4.transpose(temp, node.transformation);
-        mat4.mul(mvMatrix,mvMatrix,  temp);
+        mat4.mul(mvMatrix, mvMatrix, temp);
     }
 
     if (node.meshes) {
@@ -99,9 +96,8 @@ AssimpScene.prototype.draw = function(shaderProgram, mvMatrix, node ) {
     }
 };
 
-
-
 function Renderer(canvas_id, stats, engine) {
+    "use strict";
     window.requestAnimationFrame = window.requestAnimationFrame || window.mozRequestAnimationFrame ||
         window.webkitRequestAnimationFrame || window.msRequestAnimationFrame;
     var canvas = document.getElementById(canvas_id);
@@ -112,7 +108,7 @@ function Renderer(canvas_id, stats, engine) {
     this.manager = new ResourceManager();
     engine.renderer = this;
 
-    this.gl =undefined;
+    this.gl = undefined;
 
     this.pMatrix = mat4.create();
     this.mvMatrix = mat4.create();
@@ -128,26 +124,26 @@ function Renderer(canvas_id, stats, engine) {
     this.gl.clearColor(0.0, 0.0, 0.0, 1.0);
     this.initFB();
 
-    
 
-    mat4.perspective(this.pMatrix,45, this.gl.canvas.width/this.gl.canvas.height, 0.1, 10000.0);
+
+    mat4.perspective(this.pMatrix, 45, this.gl.canvas.width / this.gl.canvas.height, 0.1, 10000.0);
     mat4.identity(this.mvMatrix);
 
-    mat4.lookAt(this.lookatMatrix,[0, 0, 120], [0, 0, 0], [0, 1, 0]);
+    mat4.lookAt(this.lookatMatrix, [0, 0, 120], [0, 0, 0], [0, 1, 0]);
     //mat4.translate(this.mvMatrix, this.mvMatrix, [0, 0.0, -120]);
     this.gl.enable(this.gl.DEPTH_TEST);
 
     this.currCamera = new Camera(engine);
 
-    console.dir( this.gl.getSupportedExtensions());
+    console.dir(this.gl.getSupportedExtensions());
     //setInterval(this.drawScene.bind(this), 1000/60);
 }
 
 Renderer.prototype.initGL = function(canvas) {
     try {
-        this.rawgl =  canvas.getContext("experimental-webgl")||canvas.getContext("webgl");
+        this.rawgl = canvas.getContext("experimental-webgl") || canvas.getContext("webgl");
     }
-    catch(e) {}
+    catch (e) {}
 
     if (!this.rawgl) {
         console.error("Unable to load webgl");
@@ -158,11 +154,12 @@ Renderer.prototype.initGL = function(canvas) {
             WebGLDebugUtils.glFunctionArgsToString(functionName, args) + ")");
     }
 //    this.gl = WebGLDebugUtils.makeDebugContext(this.rawgl, undefined, logGLCall);
-//    this.gl = WebGLDebugUtils.makeDebugContext(this.rawgl);
-    this.gl = this.rawgl;
+    this.gl = WebGLDebugUtils.makeDebugContext(this.rawgl);
+//    this.gl = this.rawgl;
 
     this.extDepth = this.gl.getExtension("WEBGL_depth_texture");
     this.extDraw = this.gl.getExtension("WEBGL_draw_buffers");
+    console.dir(this.extDraw);
     this.extFloat = this.gl.getExtension("OES_texture_float");
 };
 
@@ -170,6 +167,15 @@ Renderer.prototype.initGL = function(canvas) {
 Renderer.prototype.initShaders = function() {
     "use strict";
     var gl = this.gl;
+
+    function printShader(source) {
+        var lines = source.split("\n");
+        var i;
+        for (i = 0; i < lines.length; ++ i)
+            lines[i] = (i + 1) + ": " + lines[i];
+        console.log(lines.join("\n"));
+
+    }
     function getShader(id) {
         "use strict";
         var shaderScript, theSource, currentChild, shader;
@@ -183,11 +189,10 @@ Renderer.prototype.initShaders = function() {
         theSource = "";
         currentChild = shaderScript.firstChild;
 
-        while(currentChild) {
+        while (currentChild) {
             if (currentChild.nodeType === currentChild.TEXT_NODE) {
                 theSource += currentChild.textContent;
             }
-
             currentChild = currentChild.nextSibling;
         }
         if ("x-shader/x-fragment" === shaderScript.type) {
@@ -205,7 +210,7 @@ Renderer.prototype.initShaders = function() {
 
         // See if it compiled successfully
         if (!gl.getShaderParameter(shader, gl.COMPILE_STATUS)) {
-            console.log(theSource);
+            printShader(theSource);
             alert("An error occurred compiling the shaders: " + gl.getShaderInfoLog(shader));
 
             return null;
@@ -240,15 +245,18 @@ Renderer.prototype.initShaders = function() {
     var i, cShader;
     for (i = 0; i < shaders.length; ++i) {
         cShader = shaders[i];
+        this.gl.useProgram(cShader);
         cShader.vertexPositionAttribute = this.gl.getAttribLocation(cShader, "aVertexPosition");
         cShader.normalAttribute = this.gl.getAttribLocation(cShader, "aNormal");
         this.gl.enableVertexAttribArray(cShader.vertexPositionAttribute);
         this.gl.enableVertexAttribArray(cShader.normalAttribute);
+        if (cShader.vertexPositionAttribute === -1 || cShader.normalAttribute === -1) {
+            console.log("Problem in shader:" + i);
+        }
 
         cShader.pMatrixUniform = this.gl.getUniformLocation(cShader, "uPMatrix");
         cShader.mvMatrixUniform = this.gl.getUniformLocation(cShader, "uMVMatrix");
         cShader.lookat = this.gl.getUniformLocation(cShader, "uLookAt");
-
     }
 
     this.shaders = shaders;
@@ -256,7 +264,6 @@ Renderer.prototype.initShaders = function() {
 };
 
 Renderer.prototype.initFB = function() {
-    "use strict";
     var gl = this.gl;
     var i;
     this.fbo = gl.createFramebuffer();
@@ -266,7 +273,7 @@ Renderer.prototype.initFB = function() {
     this.normal = this.createFBTexture(gl.RGBA, gl.FLOAT);
     this.bufs = [];
     for (i = 0; i < 4; ++i) {
-        this.bufs[i] = this.extDraw.COLOR_ATTACHMENT0_WEBGL+i;
+        this.bufs[i] = this.extDraw.COLOR_ATTACHMENT0_WEBGL + i;
     }
 };
 
@@ -293,8 +300,10 @@ Renderer.prototype.createFBTexture = function(type, size, type2) {
     "use strict";
     var gl = this.gl;
     var texture = gl.createTexture();
-    if (!type2)
+    if (!type2) {
         type2 = type;
+    }
+
     gl.bindTexture(gl.TEXTURE_2D, texture);
     gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
     gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
@@ -304,7 +313,7 @@ Renderer.prototype.createFBTexture = function(type, size, type2) {
     return texture;
 };
 
-Renderer.prototype.drawFullScreenQuad = function () {
+Renderer.prototype.drawFullScreenQuad = function() {
     "use strict";
     var gl = this.gl;
     if (!this.quad_vertex_buffer) {
@@ -312,10 +321,10 @@ Renderer.prototype.drawFullScreenQuad = function () {
         var quad_vertex_buffer_data = new Float32Array([
             -1.0, -1.0, 0.0,
             1.0, -1.0, 0.0,
-            -1.0,  1.0, 0.0,
-            -1.0,  1.0, 0.0,
+            -1.0, 1.0, 0.0,
+            -1.0, 1.0, 0.0,
             1.0, -1.0, 0.0,
-            1.0,  1.0, 0.0]);
+            1.0, 1.0, 0.0]);
         gl.bindBuffer(gl.ARRAY_BUFFER, this.quad_vertex_buffer);
         gl.bufferData(gl.ARRAY_BUFFER, quad_vertex_buffer_data, gl.STATIC_DRAW);
     }
@@ -324,15 +333,18 @@ Renderer.prototype.drawFullScreenQuad = function () {
 
     gl.bindBuffer(gl.ARRAY_BUFFER, quad_vertex_buffer);
     gl.vertexAttribPointer(this.shaderProgram.vertexPositionAttribute, 3, gl.FLOAT, false, 0, 0);
-    //gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, null);
-    gl.drawArrays(gl.TRIANGLES,0, 6);
+    gl.drawArrays(gl.TRIANGLES, 0, 6);
 };
+
 Renderer.prototype.drawScene = function() {
     "use strict";
 
     var gl = this.gl;
 
-    
+    if (!this.currScene) {
+        return;
+    }
+
     gl.enable(gl.DEPTH_TEST);
     this.shaderProgram = this.shaders[0];
     gl.useProgram(this.shaderProgram);
@@ -346,21 +358,19 @@ Renderer.prototype.drawScene = function() {
     gl.framebufferTexture2D(gl.FRAMEBUFFER, this.bufs[2], gl.TEXTURE_2D, this.normal, 0);
     gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.DEPTH_STENCIL_ATTACHMENT, gl.TEXTURE_2D, this.depthText, 0);
     gl.viewport(0, 0, gl.canvas.width, gl.canvas.height);
-    gl.clear(this.gl.COLOR_BUFFER_BIT | this.gl.DEPTH_BUFFER_BIT);
+    //gl.clear(this.gl.COLOR_BUFFER_BIT | this.gl.DEPTH_BUFFER_BIT);
 
     this.currCamera.animate();
-    mat4.rotate(this.mvMatrix, this.mvMatrix, 0.1, [1, 1, 1]);
 
     this.setMatrixUniform();
-
-
 
     this.currScene.draw(this.shaderProgram, mat4.clone(this.mvMatrix));
 
     this.shaderProgram = this.shaders[1];
     gl.bindFramebuffer(gl.FRAMEBUFFER, null);
     gl.disable(gl.DEPTH_TEST);
-    gl.clear(this.gl.COLOR_BUFFER_BIT | this.gl.DEPTH_BUFFER_BIT);
+    //gl.disable(gl.STENCIL_TEST);
+    //gl.clear(this.gl.COLOR_BUFFER_BIT | this.gl.DEPTH_BUFFER_BIT);
 
     gl.useProgram(this.shaderProgram);
     gl.activeTexture(gl.TEXTURE0);
@@ -375,12 +385,11 @@ Renderer.prototype.drawScene = function() {
     gl.activeTexture(gl.TEXTURE3);
     gl.bindTexture(gl.TEXTURE_2D, this.normal);
     var i;
-    for (i = 0; i < 4; ++i)
-        gl.uniform1i(gl.getUniformLocation(this.shaderProgram, "uSampler"+i), i);
-    //gl.uniform1i(gl.getUniformLocation(this.shaderProgram, "uSampler1"), 1);
+    for (i = 0; i < 4; ++i) {
+        gl.uniform1i(gl.getUniformLocation(this.shaderProgram, "uSampler" + i), i);
+    }
 
     this.setMatrixUniform();
 
     this.drawFullScreenQuad();
-
 };
