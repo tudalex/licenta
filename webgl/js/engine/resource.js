@@ -14,7 +14,7 @@ ResourceManager.prototype.xhrLoadBinary = function(url, callback, type) {
     var req = new XMLHttpRequest();
     req.open("GET", url, true);
     req.responseType = "arraybuffer";
-    req.onload = function (data) {
+    req.onload = function(data) {
         callback(req.response, req.responseType);
     };
     req.send();

@@ -6,6 +6,9 @@
 \abbrev{JS}{Javascript}
 \abbrev{SIMD}{Single Instruction Multiple Data}
 \abbrev{API}{Application Programming Interface}
+\abbrev{SDL}{Simple DirectMedia Layer}
+\abbrev{GLUT}{OpenGL Utility Toolkit}
+\abbrev{GLFW}{OpenGL Framework}
 
 The scope of the paper is to implement and investigate the potential of implementing a
 \project\ using WebGL and web technologies and leveraging them in order to create an efficient game engine.
@@ -37,7 +40,7 @@ In 2011, Mozilla introduced Emscripten, a C++ compiler that compiles C++ code to
 Javascript, allowing the porting of existing C++ game engines to the web. They also
 created asm.js, a typed subset of JavaScript that can be compiled by the JavaScript
 interpreter directly to microprocessor instructions. They made it so that Emscripten
-generated JavaScript code can get the biggest performance benefit from this. The problem for Emscripten is that if you compile an engine designed for desktop use, you won’t take benefit of the things that the browser offers (like input callbacks, image loading and decompressing, video and audio decompressing and playback capabilities and various other). To fix this problem, Emscripten has it’s own implementation of popular libraries like SDL, glut or glfw that use the browsers native system. Another problem of Emscripten is that JavaScript does not support threads; instead it uses workers. Workers are usually implemented by the interpreter as a separate thread which can communicate only over a message passing API. This means that most of the algorithms implemented in modern engines that use multithreading will not be easily ported and also it introduces a overhead related to the memory copy necessary to transmit the message. The huge advantage is given by asm.js which allows Emscripten compiled C++ code to achieve near native speed performance in your browser. Mozilla, together with Epic, announced that they ported Unreal Engine 4 to the browser, after last year porting the well known Unreal Engine 3 to the browser using emscripten. Unity technologies also announced at GDC that their next Unity Engine will have the ability to export your game to the browser.
+generated JavaScript code can get the biggest performance benefit from this. The problem for Emscripten is that if you compile an engine designed for desktop use, you won’t take benefit of the things that the browser offers (like input callbacks, image loading and decompressing, video and audio decompressing and playback capabilities and various other). To fix this problem, Emscripten has it’s own implementation of popular libraries like SDL, GLUT or GLFW that use the browsers native system. Another problem of Emscripten is that JavaScript does not support threads; instead it uses workers. Workers are usually implemented by the interpreter as a separate thread which can communicate only over a message passing API. This means that most of the algorithms implemented in modern engines that use multithreading will not be easily ported and also it introduces a overhead related to the memory copy necessary to transmit the message. The huge advantage is given by asm.js which allows Emscripten compiled C++ code to achieve near native speed performance in your browser. Mozilla, together with Epic, announced that they ported Unreal Engine 4 to the browser, after last year porting the well known Unreal Engine 3 to the browser using emscripten. Unity technologies also announced at GDC that their next Unity Engine will have the ability to export your game to the browser.
 
 
 A competitive technology pushed by Google in the Chrome web browser is Portable Native

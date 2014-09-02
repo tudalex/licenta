@@ -2,10 +2,11 @@
  * Created by tudalex on 07.03.2014.
  */
 
-function AssimpScene(data, gl) {
+function AssimpScene(data, gl, timer) {
     "use strict";
     this.data = data;
     this.gl = gl;
+    this.timer = timer;
 
     this.init();
 }
@@ -52,6 +53,8 @@ AssimpScene.prototype.init = function() {
 
 
 AssimpScene.prototype.drawMesh = function(idx, shaderProgram) {
+    "use strict";
+    this.timer.start(0);
     var gl = this.gl;
     var mesh = this.data.meshes[idx];
     var material = this.data.materials[mesh.materialindex];
@@ -63,7 +66,7 @@ AssimpScene.prototype.drawMesh = function(idx, shaderProgram) {
 
     gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, mesh.indexBuffer);
     gl.drawElements(gl.TRIANGLES, mesh.indexes.length, gl.UNSIGNED_SHORT, 0);
-
+    this.timer.stop(0);
 };
 
 AssimpScene.prototype.draw = function(shaderProgram, mvMatrix, node) {
@@ -96,13 +99,13 @@ AssimpScene.prototype.draw = function(shaderProgram, mvMatrix, node) {
     }
 };
 
-function Renderer(canvas_id, stats, engine) {
+function Renderer(canvas_id, stats, timer, engine) {
     "use strict";
     window.requestAnimationFrame = window.requestAnimationFrame || window.mozRequestAnimationFrame ||
         window.webkitRequestAnimationFrame || window.msRequestAnimationFrame;
     var canvas = document.getElementById(canvas_id);
     //TODO: Check it's a canvas
-
+    this.timer = timer;
     if (stats)
         this.stats = stats;
     this.manager = new ResourceManager();
@@ -126,7 +129,7 @@ function Renderer(canvas_id, stats, engine) {
 
 
 
-    mat4.perspective(this.pMatrix, 45, this.gl.canvas.width / this.gl.canvas.height, 0.1, 10000.0);
+    mat4.perspective(this.pMatrix, 45, this.gl.canvas.width / this.gl.canvas.height, 1.1, 10000.0);
     mat4.identity(this.mvMatrix);
 
     mat4.lookAt(this.lookatMatrix, [0, 0, 120], [0, 0, 0], [0, 1, 0]);
@@ -143,7 +146,9 @@ Renderer.prototype.initGL = function(canvas) {
     try {
         this.rawgl = canvas.getContext("experimental-webgl") || canvas.getContext("webgl");
     }
-    catch (e) {}
+    catch (e) {
+        window.alert("WebGL couldn't be initialized.");
+    }
 
     if (!this.rawgl) {
         console.error("Unable to load webgl");
@@ -154,8 +159,8 @@ Renderer.prototype.initGL = function(canvas) {
             WebGLDebugUtils.glFunctionArgsToString(functionName, args) + ")");
     }
 //    this.gl = WebGLDebugUtils.makeDebugContext(this.rawgl, undefined, logGLCall);
-    this.gl = WebGLDebugUtils.makeDebugContext(this.rawgl);
-//    this.gl = this.rawgl;
+//    this.gl = WebGLDebugUtils.makeDebugContext(this.rawgl);
+    this.gl = this.rawgl;
 
     this.extDepth = this.gl.getExtension("WEBGL_depth_texture");
     this.extDraw = this.gl.getExtension("WEBGL_draw_buffers");
@@ -358,16 +363,19 @@ Renderer.prototype.drawScene = function() {
     gl.framebufferTexture2D(gl.FRAMEBUFFER, this.bufs[2], gl.TEXTURE_2D, this.normal, 0);
     gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.DEPTH_STENCIL_ATTACHMENT, gl.TEXTURE_2D, this.depthText, 0);
     gl.viewport(0, 0, gl.canvas.width, gl.canvas.height);
-    //gl.clear(this.gl.COLOR_BUFFER_BIT | this.gl.DEPTH_BUFFER_BIT);
+    gl.clear(this.gl.COLOR_BUFFER_BIT | this.gl.DEPTH_BUFFER_BIT);
 
     this.currCamera.animate();
 
     this.setMatrixUniform();
 
+    this.timer.start(1);
     this.currScene.draw(this.shaderProgram, mat4.clone(this.mvMatrix));
+    this.timer.stop(1);
 
     this.shaderProgram = this.shaders[1];
     gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+    //this.extDraw.drawBuffersWEBGL(null);
     gl.disable(gl.DEPTH_TEST);
     //gl.disable(gl.STENCIL_TEST);
     //gl.clear(this.gl.COLOR_BUFFER_BIT | this.gl.DEPTH_BUFFER_BIT);
