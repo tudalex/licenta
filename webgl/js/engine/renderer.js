@@ -158,9 +158,10 @@ Renderer.prototype.initGL = function(canvas) {
         console.log("gl." + functionName + "(" +
             WebGLDebugUtils.glFunctionArgsToString(functionName, args) + ")");
     }
-//    this.gl = WebGLDebugUtils.makeDebugContext(this.rawgl, undefined, logGLCall);
-//    this.gl = WebGLDebugUtils.makeDebugContext(this.rawgl);
     this.gl = this.rawgl;
+//    this.gl = WebGLDebugUtils.makeDebugContext(this.rawgl, undefined, logGLCall);
+    this.gl = WebGLDebugUtils.makeDebugContext(this.rawgl);
+
 
     this.extDepth = this.gl.getExtension("WEBGL_depth_texture");
     this.extDraw = this.gl.getExtension("WEBGL_draw_buffers");
