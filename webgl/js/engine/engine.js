@@ -66,6 +66,5 @@ Engine.prototype.mainLoop = function() {
     if (this.stats) {
         this.stats.end();
     }
-
     window.requestAnimationFrame(this.mainLoop, this.renderer.canvas);
 };

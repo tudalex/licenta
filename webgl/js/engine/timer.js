@@ -13,6 +13,41 @@ function Timer(counters, log_stats) {
     }
 }
 
+function RealTimeTimer() {
+    "use strict";
+    this.start = window.performance.now();
+}
+
+RealTimeTimer.prototype.getTotal = function() {
+    "use strict";
+    return this.start - window.performance.now();
+};
+
+function DiscreteTimer(reference) {
+    "use strict";
+    this.reference = reference;
+    this.start = this.reference.time;
+}
+
+DiscreteTimer.prototype.getTotal = function() {
+    "use strict";
+    return this.reference.time - this.start;
+};
+
+function DiscreteTimeClock() {
+    "use strict";
+    this.time = 0;
+}
+
+DiscreteTimeClock.prototype.increment = function(val) {
+    "use strict";
+    this.time += val;
+};
+DiscreteTimeClock.prototype.getTimer = function() {
+    "use strict";
+    return new DiscreteTimer(this);
+};
+
 Timer.prototype.start = function(id) {
     "use strict";
     this.startTime[id] = window.performance.now();
@@ -51,3 +86,5 @@ Timer.prototype.destroy = function() {
     this.samples.destroy();
     this.start.destroy();
 };
+
+
