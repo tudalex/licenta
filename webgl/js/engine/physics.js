@@ -34,6 +34,6 @@ Physics.prototype.step = function() {
     "use strict";
     var newPhysicsScene = {};
     var i, bodies = this.bodies;
-    for (i = 0; i < this.this.bodies)
+    //for (i = 0; i < this.this.bodies)
 
 };
