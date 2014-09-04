@@ -103,7 +103,7 @@ function Renderer(canvas_id, stats, timer, engine) {
     "use strict";
     window.requestAnimationFrame = window.requestAnimationFrame || window.mozRequestAnimationFrame ||
         window.webkitRequestAnimationFrame || window.msRequestAnimationFrame;
-    var canvas = document.getElementById(canvas_id);
+    this.canvas = document.getElementById(canvas_id);
     //TODO: Check it's a canvas
     this.timer = timer;
     if (stats)
@@ -117,7 +117,7 @@ function Renderer(canvas_id, stats, timer, engine) {
     this.mvMatrix = mat4.create();
     this.lookatMatrix = mat4.create();
     mat4.identity(this.lookatMatrix);
-    this.initGL(canvas);
+    this.initGL(this.canvas);
     if (!this.gl) {
         return;
     }
@@ -148,6 +148,7 @@ Renderer.prototype.initGL = function(canvas) {
     }
     catch (e) {
         window.alert("WebGL couldn't be initialized.");
+        throw e;
     }
 
     if (!this.rawgl) {

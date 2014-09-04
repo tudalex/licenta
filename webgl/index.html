@@ -1,11 +1,15 @@
 <!DOCTYPE html>
 <html>
 <head>
+
+    <script type="application/javascript">
+        agliEmbedDebug = true;
+    </script>
+
     <meta charset="utf-8">
     <title> Turtle Engine </title>
 </head>
-<body >
-
+<body>
     <canvas width="512px" height="512px" id="test"></canvas>
     <script id="shader-fs" type="x-shader/x-fragment">
         #extension  GL_EXT_draw_buffers : require
@@ -210,6 +214,11 @@
         vNormal = aNormal;
       }
     </script>
+
+
+
+
+
     <!-- Vendor -->
     <script type="application/javascript" src="js/vendor/ammo.js"></script>
     <script type="application/javascript" src="js/vendor/stats.min.js"></script>
@@ -225,13 +234,22 @@
     <script type="application/javascript" src="js/engine/renderer.js"></script>
     <script type="application/javascript" src="js/engine/input.js"></script>
     <script type="application/javascript" src="js/engine/engine.js"></script>
-<script type="application/javascript">
-
-var engine = new Engine("test");
-engine.loadGameData("webgl.zip");
 
 
-</script>
+    <script type="text/javascript" src="inspector/core/embed.js"></script>
+
+
+    <script type="application/javascript">
+        var engine;
+        window.addEventListener('load', function(){
+            console.log('fuck');
+            engine = new Engine("test");
+            engine.loadGameData("webgl.zip");
+
+        });
+    </script>
+
+
 
 
 </body>
