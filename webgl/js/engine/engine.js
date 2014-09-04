@@ -5,7 +5,7 @@
 /** @export */
 function Engine(canvas_id) {
     "use strict";
-    this.timer = new Timer(16, true);
+    this.timer = new Timer(16, false);
     this.timer.map(0, "DrawMesh");
     this.timer.map(1, "Draw");
 
