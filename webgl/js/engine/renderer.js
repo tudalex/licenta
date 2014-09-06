@@ -15,7 +15,7 @@ AssimpScene.prototype.init = function() {
     "use strict";
     var gl = this.gl;
     var i, j, mesh, material, key;
-    for (i in this.data.meshes) {
+    for (i in this.data.meshes) { //jshint ignore:line
         mesh = this.data.meshes[i];
         mesh.vertexBuffer = gl.createBuffer();
         gl.bindBuffer(gl.ARRAY_BUFFER, mesh.vertexBuffer);
@@ -79,8 +79,9 @@ AssimpScene.prototype.draw = function(shaderProgram, mvMatrix, node) {
         mat4.identity(mvMatrix);
     }
 
-    if (!node)
+    if (!node) {
         node = this.data.rootnode;
+    }
     else {
         mat4.transpose(temp, node.transformation);
         mat4.mul(mvMatrix, mvMatrix, temp);
@@ -143,6 +144,7 @@ function Renderer(canvas_id, stats, timer, engine) {
 }
 
 Renderer.prototype.initGL = function(canvas) {
+    "use strict";
     try {
         this.rawgl = canvas.getContext("experimental-webgl") || canvas.getContext("webgl");
     }
@@ -157,11 +159,11 @@ Renderer.prototype.initGL = function(canvas) {
     }
     function logGLCall(functionName, args) {
         console.log("gl." + functionName + "(" +
-            WebGLDebugUtils.glFunctionArgsToString(functionName, args) + ")");
+            WebGLDebugUtils.glFunctionArgsToString(functionName, args) + ")"); //jshint ignore:line
     }
     this.gl = this.rawgl;
 //    this.gl = WebGLDebugUtils.makeDebugContext(this.rawgl, undefined, logGLCall);
-    this.gl = WebGLDebugUtils.makeDebugContext(this.rawgl);
+    this.gl = WebGLDebugUtils.makeDebugContext(this.rawgl); //jshint ignore:line
 
 
     this.extDepth = this.gl.getExtension("WEBGL_depth_texture");
@@ -178,13 +180,13 @@ Renderer.prototype.initShaders = function() {
     function printShader(source) {
         var lines = source.split("\n");
         var i;
-        for (i = 0; i < lines.length; ++ i)
+        for (i = 0; i < lines.length; ++ i) {
             lines[i] = (i + 1) + ": " + lines[i];
+        }
         console.log(lines.join("\n"));
 
     }
     function getShader(id) {
-        "use strict";
         var shaderScript, theSource, currentChild, shader;
 
         shaderScript = document.getElementById(id);
@@ -271,6 +273,7 @@ Renderer.prototype.initShaders = function() {
 };
 
 Renderer.prototype.initFB = function() {
+    "use strict";
     var gl = this.gl;
     var i;
     this.fbo = gl.createFramebuffer();
@@ -291,6 +294,7 @@ Renderer.prototype.drawBuffer = function(buffer) {
 };
 
 Renderer.prototype.setMatrixUniform = function() {
+    "use strict";
     var gl = this.gl;
     gl.uniformMatrix4fv(this.shaderProgram.pMatrixUniform, false, this.pMatrix);
     gl.uniformMatrix4fv(this.shaderProgram.mvMatrixUniform, false, this.mvMatrix);
@@ -365,7 +369,8 @@ Renderer.prototype.drawScene = function() {
     gl.framebufferTexture2D(gl.FRAMEBUFFER, this.bufs[2], gl.TEXTURE_2D, this.normal, 0);
     gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.DEPTH_STENCIL_ATTACHMENT, gl.TEXTURE_2D, this.depthText, 0);
     gl.viewport(0, 0, gl.canvas.width, gl.canvas.height);
-    gl.clear(this.gl.COLOR_BUFFER_BIT | this.gl.DEPTH_BUFFER_BIT);
+
+    gl.clear(this.gl.COLOR_BUFFER_BIT | this.gl.DEPTH_BUFFER_BIT); //jshint ignore:line
 
     this.currCamera.animate();
 
