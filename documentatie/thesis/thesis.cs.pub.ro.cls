@@ -249,4 +249,4 @@
 \usepackage{multirow}
 
 % mathematical formulas
-\usepackage{amsmath}
+\usepackage{mathtools}
