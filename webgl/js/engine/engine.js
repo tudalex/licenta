@@ -24,7 +24,9 @@ function Engine(canvas_id) {
     this.manager = this.renderer.manager;
     this.mainLoop = this.mainLoop.bind(this);
     console.dir(this);
-    this.mainLoop();
+
+    this.renderer.loadShaderPrograms()
+        .then(this.mainLoop);
 }
 
 /** @export */
@@ -59,8 +61,12 @@ Engine.prototype.loadScene = function(scene) {
 
 Engine.prototype.mainLoop = function() {
     "use strict";
-    if (this.stats)
+
+    //console.warn('in main loop!!!!');
+    if (this.stats) {
         this.stats.begin();
+    }
+
     this.renderer.drawScene();
 
     if (this.stats) {

@@ -123,8 +123,8 @@
     shaderProgram.textureCoordAttribute = gl.getAttribLocation(shaderProgram, "aTextureCoord");
     gl.enableVertexAttribArray(shaderProgram.textureCoordAttribute);
 
-    shaderProgram.pMatrixUniform = gl.getUniformLocation(shaderProgram, "uPMatrix");
-    shaderProgram.mvMatrixUniform = gl.getUniformLocation(shaderProgram, "uMVMatrix");
+    shaderProgram.pMatUniform = gl.getUniformLocation(shaderProgram, "uPMatrix");
+    shaderProgram.mMatUniform = gl.getUniformLocation(shaderProgram, "uMVMatrix");
     shaderProgram.samplerUniform = gl.getUniformLocation(shaderProgram, "uSampler");
   }
 
@@ -228,8 +228,8 @@
 
 
   function setMatrixUniforms() {
-    gl.uniformMatrix4fv(shaderProgram.pMatrixUniform, false, new Float32Array(pMatrix.flatten()));
-    gl.uniformMatrix4fv(shaderProgram.mvMatrixUniform, false, new Float32Array(mvMatrix.flatten()));
+    gl.uniformMatrix4fv(shaderProgram.pMatUniform, false, new Float32Array(pMatrix.flatten()));
+    gl.uniformMatrix4fv(shaderProgram.mMatUniform, false, new Float32Array(mvMatrix.flatten()));
   }
 
 

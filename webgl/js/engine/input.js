@@ -9,7 +9,7 @@ function InputControl(elementId) {
     this.keystatus = new Uint8Array(256);
     this.initKeyboard();
     this.initMouseLock();
-    this.debug = true;
+    this.debug = false;
     this.actions = {};
 }
 
@@ -42,8 +42,10 @@ InputControl.prototype.action = function(name) {
 };
 
 InputControl.prototype.keyCallback = function(ev) {
-    if (this.debug)
+    if (this.debug) {
         console.log(ev.type, ev.keyCode);
+        console.log(JSON.stringify(this.actions));
+    }
     switch (ev.type) {
         case "keyup":
             this.keystatus[ev.keyCode] = 0;
@@ -51,7 +53,6 @@ InputControl.prototype.keyCallback = function(ev) {
         case "keydown":
             this.keystatus[ev.keyCode] = 1;
     }
-    console.log(JSON.stringify(this.actions));
 };
 
 InputControl.prototype.initKeyboard = function() {
