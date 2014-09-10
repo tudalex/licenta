@@ -1,5 +1,6 @@
 \documentclass{thesis.cs.pub.ro}
-\usepackage{arrayjob} % array macros needed for first page
+\usepackage{arrayjobx} % array macros needed for first page
+
 \makeindex
 \begin{document}
 
@@ -34,8 +35,11 @@
 \appendix
 \input{src/appendix/index}
 
+\nocite{*}
 \bibliography{src/main}
 \bibliographystyle{plain}
+
+
 
 \printindex
 

@@ -2,19 +2,92 @@
 \label{chapter:Chapter 2}
 
 
-In the \labelref{previous chapter}{chapter:intro} 
 
-\section{Deffered Rendering}
 
-Deffered rendering
+\section{Rendering Engines}
+\subsection {Three JS}
 
-\section{WebGL Rendering Frameworks}
+Three.JS is a popular rendering framework \footnote{https://github.com/mrdoob/three.js/}for the web, with over sixteen thousand persons following its updates and approximately four thousand five hundred forks. It supports fallbacks for rendering on a 2D Canvas, SVG and even an experimental CSS renderer that uses div tags as quads.
+Three.JS consists of multiple modules: Renderers (Canvas, SVG and WebGL), effects, scene management, cameras (orthographic and perspective), animation (morph, keyframe), lights (ambient, area, hemisphere, directional, spot, point), materials (lambert, Phong, shaded material), objects (meshes, particles, sprites, lines, ribbons, bones), geometry (plane, cube, sphere, etc.).
+By the vast number of things that it supports, it is clear that Three.JS is a full fledged rendering engine. You can assume that the rendering engine.
 
-\subsection{Three.JS}
+
+
+\subsection{Sim JS}
  
-One of the most renowned rendering frameworks is Three.JS
+Sim JS is a simulation engine that uses ThreeJS in order to perform simulations. It uses a Discrete Event simulation in which each object is a publisher and a subscriber to different objects. It also features utilities in order to more easily load objects and textures.
+
+\subsection{Cubic VR}
+
+Cubic VR is a C++ 3D engine that was manually ported to JavaScript before Emscripten existed. The port consists of only the rendering engine. Nowadays, there is a demo of an experimental integration with ammo.js which will bring the JavaScript implementation on par with the C++ one.
+
+\subsection{PhysiJS} 
+
+PhysiJS is a physics plugin for ThreeJS that exports an object API and in the background syncs the objects between the ThreeJS rendering and the physics engine (ammo.js)
+
+\section{Game Engines}
+
+\subsection{Unity 3D}
+
+A popular engine in the indie games community Unity 3D announced at GDC (Game Developers Conference) that Unity 5 will have support for exporting games to WebGL. (from reference \cite{echterhoff14}) They are using the Emscripten compiler toolchain in order to cross compile their game engine to JavaScript. In order to compile the .NET game code (the C\# or UnityScript scripts used) into JavaScript, they developed their own technology named IL2CPP.  IL2CPP takes .NET bytecode and converts it to corresponding C++ source files. The generated C++ source code is then compiled into JavaScript using the Emscripten toolchain.
+Their port will have some features which are not available, like: networking support, support for WebCam and Microphone, hardware cursor support, script debugging, threads and any .NET features that require dynamic code generation.
+Some of these stand out, because there is no technological reason for them not to be supported. For example, Microphone and WebCam support can easily be integrated into the engine using the getUserMedia API. (from reference \cite{bidelman12}) Also as networking support goes, although they said HTTP access will be there, we see that they don’t plan on support P2P connections through WebRTC.
+
+\subsection{Unreal Engine 3}
+
+Unreal partnered with Mozilla in order to release Unreal Engine 3’s Epic Citadel Demo using WebGL and HTML5 technologies. (from reference \cite{unrealengine13}). The demo, Epic Citadel demos most of the features present in the mobile version of the engine, like: realistic reflections and animations, global illumination and dynamic specular. It was ported with help from Mozilla by using Emscripten to WebGL. They managed to port it to WebGL in just four days. The technologies demoed in lighting with texture maps. They later announced that they are working with Mozilla in order to port their new engine Unreal Engine 4 to the web using the same technologies. (from reference \cite{lardinois14}) Their plan is to offer HTML5 as a platform for game deployment in the new engine.
+
+\subsection{Unigine}
+
+Unigine is a proprietary cross-platform game engine, developed by Unigine Corp. The engine is famous as being part of the Phoronix Test Suite as a benchmark, on Linux and other systems. 
+The Unigine engine was ported to WebGL by ACTISKU, a company that develops 3D marketing solutions using the UNIGINE Engine using the full source of the UNIGINE SDK. Although this port exists, there is no official support for it from UNIGINE.(from referene \cite{unigine13})
+
+\subsection{CryEngine}
+
+CryEngine is a game engine made by Crytek. It has been used in all their games and currently arrived at version 4. The 4th generation of CryEngine will be ported to all the available consoles and to Linux, but there is no plan to port it to the web.
+
+\subsection{Godot}
+
+Godot is a open source game engine created by OKAM studio. It features 2D and 3D game creation tools and a single engine for both types of games. It uses its own scripting language named GDScript which has a syntax similar to Python. The game engine is written in OpenGL ES 2.0 and supports all the available platforms. For shading, it uses a simplified shading language that can be used in order to create materials, post-processing and 2D. The shaders are divided in vertex shaders and fragment shaders. It has its own physics engines for 2D and for 3D. The engine supports a vast number of platforms:  Windows, OS X, Linux, Android, iOS, BlackBerry 10, HTML5, Flash, NaCl, PlayStation 3, PlayStation Vita and 3DS. It has its design based upon a engine implementation for each platform and the game is delivered via a data.zip file which contains all the game files. It is ported to HTML5 using Emscripten.
+
+\section{Physics Engines}
+
+\subsection{Bullet Physics}
+
+Bullet Physics is a popular physics engine which is Open Source. It is widely used in the industry in triple A games like: Grand Theft Auto IV, Grand Theft Auto V, Red Dead Redemption, DiRT, etc, and also used in movies like 2012, Hancock, Bolt, The A-Team, Sherlock Holmes, Megamind and Shrek 4. It has been ported to every platform out there: Xbox 360, PlayStation 3, iOS, Android, Wii, Linux, Windows and OS X. It is optimized for PS3 SPU, CUDA and OpenCL in order to accelerate the physics simulation.
+
+\subsection{AmmoJS}
+
+AmmoJS is the JavaScript port of the Bullet Physics engine. It was ported by Alon Zakai, the author of Emscripten. The porting was done using the Emscripten toolchain and wrapped using an API.
+
+\subsection{ Havok Physics}
+
+Havok Physics is a physics engine that has been used in over 500 games. It is easy to use, fast, multithreaded and integrates well with Havok Animation and the various other tools that Havok offers. It has not been ported to JavaScript yet. 
+
+\subsection{PhysX}
+
+PhysX is a physics engine developed by Nvidia which uses GPGPU in order to accelerate physics simulations. It is ported to all the available consoles and platforms. It is not ported to the web because of the lack of support for GPGPU computations from inside a HTML5 page.
+
+\section{Input Control}
+
+\subsection{Gamepad.JS}
+
+Gamepad.JS is a JavaScript library that offers an abstraction layer between the different implementations of the Gamepad API in browsers. It is currently deprecated.
+
+\subsection{GLFW/GLUT}
+
+For desktop platforms there are different frameworks that offer a callback based approach for input control. Emscripten detects this frameworks and wrapps the callbacks to the normal DOM (Document Object Model) events for keypresses. Their behavior maps perfectly as the DOM also has a event based input system. All of the logic of getting the state of the keys and mouse is let to the developer to handle.
+
+\section{Scripting}
+
+\subsection{Lua}
+
+Lua is a scripting language used in multiple game engines (Irrlicht, CryENGINE). Lua is garbage collected compiled language. Similar to Java it needs a VM (Virtual Machine) to interpret the bytecode. LuaJIT is a Lua VM with a JIT that speeds up Lua execution.
+
+\subsection{C++}
+
+C++ scripting is done by compiling the scripts into dynamic libraries that are then linked at runtime and have methods out of them called. This is the most efficient way of linking to scripts since there is no VM, no garbage collection and no bindings. The only caveat is that it requires recompiling for each modification for each platform and do platform specific optimizations on code.
+	
 
 
-\section{}
 
-\section{} 

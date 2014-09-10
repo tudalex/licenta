@@ -4,12 +4,42 @@
 
 "use strict";
 
+function InputControlSystem(elementId) {
+    this.elemntId = elementId;
+    this.currentInputControl = {};
+}
+
+InputControlSystem.prototype.keyCallback = function(ev) {
+    this.currentInputControl.keyCallback(ev);
+};
+
+InputControlSystem.prototype.initKeyboard = function() {
+    document.addEventListener('keydown', this.keyCallback.bind(this));
+    document.addEventListener('keyup', this.keyCallback.bind(this));
+
+};
+
+InputControlSystem.prototype.releaseKeybaord = function() {
+    document.removeEventListener('keydown', this.keyCallback.bind(this));
+    document.removeEventListener('keyup', this.keyCallback.bind(this));
+};
+
+InputControlSystem.prototype.useInputControl = function(inputControl) {
+    this.currentInputControl = inputControl;
+};
+
+InputControlSystem.prototype.mouseMoveCallback = function(m) {
+
+};
+
+InputControlSystem.prototype.initMouseLock = function() {
+    var elem = document.getElementById(this.element_id);
+};
+
 function InputControl(elementId) {
     this.elementId = elementId;
     this.keystatus = new Uint8Array(256);
-    this.initKeyboard();
-    this.initMouseLock();
-    this.debug = false;
+    this.debug = true;
     this.actions = {};
 }
 
@@ -27,8 +57,9 @@ InputControl.prototype.defineAction = function(name) {
         if (typeof triggers[i] === "string" && triggers[i].length === 1) {
             triggers[i] = triggers[i].charCodeAt(0);
         }
-        if (typeof triggers[i] === "number")
+        if (typeof triggers[i] === "number") {
             processed_triggers.push(triggers[i]);
+        }
     }
     this.actions[name] = processed_triggers;
 };
@@ -42,10 +73,8 @@ InputControl.prototype.action = function(name) {
 };
 
 InputControl.prototype.keyCallback = function(ev) {
-    if (this.debug) {
+    if (this.debug)
         console.log(ev.type, ev.keyCode);
-        console.log(JSON.stringify(this.actions));
-    }
     switch (ev.type) {
         case "keyup":
             this.keystatus[ev.keyCode] = 0;
@@ -53,25 +82,11 @@ InputControl.prototype.keyCallback = function(ev) {
         case "keydown":
             this.keystatus[ev.keyCode] = 1;
     }
+    console.log(JSON.stringify(this.actions));
 };
 
-InputControl.prototype.initKeyboard = function() {
-    document.addEventListener('keydown', this.keyCallback.bind(this));
-    document.addEventListener('keyup', this.keyCallback.bind(this));
 
-};
 
-InputControl.prototype.releaseKeybaord = function() {
-    document.removeEventListener('keydown', this.keyCallback.bind(this));
-    document.removeEventListener('keyup', this.keyCallback.bind(this));
-};
 
-InputControl.prototype.mouseMoveCallback = function(m) {
-
-};
-
-InputControl.prototype.initMouseLock = function() {
-    var elem = document.getElementById(this.element_id);
-};
 
 

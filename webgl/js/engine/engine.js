@@ -10,7 +10,9 @@ function Engine(canvas_id) {
     this.timer.map(1, "Draw");
 
     this.stats = this.initStats();
+    this.inputControl = new InputControlSystem();
     this.input = new InputControl(canvas_id);
+    this.inputControl.useInputControl(this.input);
     this.input.defineAction('forward', 'W');
     this.input.defineAction('backward', 'S');
     this.input.defineAction('left', 'A');
