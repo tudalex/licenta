@@ -3680,10 +3680,10 @@ mat4.lookAt = function (out, eye, center, up) {
  * @returns {String} string representation of the matrix
  */
 mat4.str = function (a) {
-    return 'mat4(' + a[0] + ', ' + a[1] + ', ' + a[2] + ', ' + a[3] + ', ' +
-                    a[4] + ', ' + a[5] + ', ' + a[6] + ', ' + a[7] + ', ' +
-                    a[8] + ', ' + a[9] + ', ' + a[10] + ', ' + a[11] + ', ' + 
-                    a[12] + ', ' + a[13] + ', ' + a[14] + ', ' + a[15] + ')';
+    return 'mat4(\n' + a[0] + ',\t' + a[1] + ',\t' + a[2] + ',\t' + a[3] + ',\n' +
+                    a[4] + ',\t' + a[5] + ',\t' + a[6] + ',\t' + a[7] + ',\n' +
+                    a[8] + ',\t' + a[9] + ',\t' + a[10] + ',\t' + a[11] + ',\n' +
+                    a[12] + ',\t' + a[13] + ',\t' + a[14] + ',\t' + a[15] + '\n)';
 };
 
 /**

@@ -57,6 +57,5 @@ Camera.prototype.animate = function(time) { //FIXME: Probably wrong name for the
     var processed_up = vec3.create();
     vec3.transformQuat(processed_eye, this.eye, this.quat);
     vec3.transformQuat(processed_up, this.up, this.quat);
-    mat4.lookAt(this.renderer.lookatMatrix, processed_eye, this.center, processed_up);
-
+    mat4.lookAt(this.renderer.vMat, processed_eye, this.center, processed_up);
 };
