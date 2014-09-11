@@ -7,10 +7,12 @@
 function InputControlSystem(elementId) {
     this.elemntId = elementId;
     this.currentInputControl = {};
+    this.initKeyboard();
+    this.initMouseLock();
 }
 
 InputControlSystem.prototype.keyCallback = function(ev) {
-    this.currentInputControl.keyCallback(ev);
+    this.currentInputControl.keyCallback.call(this.currentInputControl, ev);
 };
 
 InputControlSystem.prototype.initKeyboard = function() {
@@ -73,8 +75,9 @@ InputControl.prototype.action = function(name) {
 };
 
 InputControl.prototype.keyCallback = function(ev) {
-    if (this.debug)
+    if (this.debug) {
         console.log(ev.type, ev.keyCode);
+    }
     switch (ev.type) {
         case "keyup":
             this.keystatus[ev.keyCode] = 0;

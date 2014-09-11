@@ -14,18 +14,15 @@ function Camera(engine) {
     this.up = [0, 1, 0];
 
     this.quat = quat.create();
-
-
 }
 
-Camera.prototype.animate = function (time) { //FIXME: Probably wrong name for the function
+Camera.prototype.animate = function(time) { //FIXME: Probably wrong name for the function
     "use strict";
     var temp;
 
-    //noinspection StatementWithEmptyBodyJS
     if (this.input.action('forward')) {
         temp = vec3.create();
-        vec3.subtract(temp, this.eye,this.center); // move twords center
+        vec3.subtract(temp, this.eye, this.center); // move twords center
 
         if (vec3.sqrLen(temp) > 10) {
             vec3.normalize(temp, temp);
@@ -35,7 +32,7 @@ Camera.prototype.animate = function (time) { //FIXME: Probably wrong name for th
     }
     if (this.input.action('backward')) {
         temp = vec3.create();
-        vec3.subtract(temp, this.eye,this.center); // move twords center
+        vec3.subtract(temp, this.eye, this.center); // move twords center
         vec3.normalize(temp, temp);
         vec3.scale(temp, temp, 7);
         vec3.add(this.eye, this.eye, temp);

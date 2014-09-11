@@ -94,9 +94,9 @@ AssimpScene.prototype.draw = function(shaderProgram, mvMatrix, node) {
     }
 
     if (node.children) {
-        for (i in node.children)
+        for (i in node.children) {
             this.draw(shaderProgram, mat4.clone(mvMatrix), node.children[i]);
-
+        }
     }
 };
 
