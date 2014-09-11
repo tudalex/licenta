@@ -25,17 +25,16 @@ The face normal, N, is defined using the normalized cross product of any two edg
 
 The normal is necessary in order to figure out which is the front face and which is the back, the reason we need this is so that OpenGL can do back face culling. This is especially required for transparent objects.
 
-\subsubsection{Triangle lists, indexed traingle lists, strips and fans}
+\subsubsection{Triangle lists, indexed triangle lists, strips and fans}
 
 There are multiple ways of specifying triangles to the GPU. Here are four ways in which we can do this using OpenGL:
 
-\textbullet Triangle Lists - The most simple way of specifying triangles for the videocard to render is by using a triangle list. This is a list of points, each three points making a triangle with the winding order in the order in which they are specified.
-
-\textbullet Indexed Triangle Lists -  If a object shares points with multiple triangles it is easier to specify a list o points and another list of indexes for the order in which the points form triangles.
-
-\textbullet Triangle Strips - These can be used for rendering a triangle strip in which a point always forms a triangle with the previous two points. These specialized structures can be used to efficiently store a mesh, since it doesn’t require repeating vertices and also it doesn’t need a index buffer.
-
-\textbullet Triangle Fans - Triangle fans are similar to strips, just that they make a triangle with the first vertice in the fan and the last one.
+\begin{easylist}[itemize]
+& Triangle Lists - The most simple way of specifying triangles for the videocard to render is by using a triangle list. This is a list of points, each three points making a triangle with the winding order in the order in which they are specified.
+& Indexed Triangle Lists -  If a object shares points with multiple triangles it is easier to specify a list o points and another list of indexes for the order in which the points form triangles.
+& Triangle Strips - These can be used for rendering a triangle strip in which a point always forms a triangle with the previous two points. These specialized structures can be used to efficiently store a mesh, since it doesn’t require repeating vertices and also it doesn’t need a index buffer.
+& Triangle Fans - Triangle fans are similar to strips, just that they make a triangle with the first vertice in the fan and the last one.
+\end{easylist}
 
 \subsection{Model space}
 
@@ -76,20 +75,48 @@ The \(v_{x}\), \(v_{y}\) and \(v_{z}\) represent the amount of movement under th
 For rotation there are three rotation matrices, each for each axis:
 
 % insert matrices here
-
+\begin{alignat}{1}
+	R_x(\theta) &= \begin{bmatrix}
+		1 & 0 & 0 & 0\\
+		0 & \cos \theta &  -\sin \theta & 0\\
+		0 & \sin \theta  &  \cos \theta  & 0\\
+		0 & 0 & 0 & 1
+	\end{bmatrix} \\
+	R_y(\theta) &= \begin{bmatrix}
+		\cos \theta & 0 & \sin \theta & 0\\
+		0 & 1 & 0 & 0\\
+		-\sin \theta & 0 & \cos \theta & 0 \\
+		0 & 0 & 0 & 1
+	\end{bmatrix} \\
+	R_z(\theta) &= \begin{bmatrix}
+		\cos \theta &  -\sin \theta & 0 & 0\\
+		\sin \theta & \cos \theta & 0 & 0\\
+		0 & 0 & 1 & 0\\
+		0 & 0 & 0 & 1
+	\end{bmatrix}
+\end{alignat}
 \subsubsection{Scaling}
 
 Scaling matrices are used for scaling coordinates to the same scale.
 
  % insert matrices here
- 
+\[
+\begin{bmatrix}
+s_{x} & 0 & 0 & 0\\ 
+0 & s_{y} & 0 & 0\\ 
+0 & 0 & s_{z} & 0\\ 
+0 & 0 & 0 & 1
+\end{bmatrix}
+\]
 This allows each axis to be scaled individually. If all axis are scaled with the same factor, a simplified matrix can be used:
- 
  % insert matrices here
- 
-Where s is the scaling factor, because the last coordinate can be viewed as the denominator for the other three coordinates.
- 
-\subsection{Quaternions}
+ \[\begin{bmatrix}
+ 1 & 0 & 0 & 1\\
+ 0 & 1 & 0 & 1\\ 
+ 0 & 0 & 1 & 1\\ 
+ 0 & 0 & 0 & \frac{1}{s}
+ \end{bmatrix}\]
+Where $s$ is the scaling factor, because the last coordinate can be viewed as the denominator for the other three coordinates.
 
 \section{Rendering pipeline}
 
@@ -151,7 +178,7 @@ It still needs another forward pass in order to render transparent objects.~\ref
 \begin{center}
 	\begin{figure}[here]
 		
-		\includegraphics[scale=0.3]{src/img/lightning1.png}
+		\includegraphics[width=\textwidth]{src/img/lightning1.png}
 		\caption{Renderer layout}
 		\label{img:lightning1}
 	\end{figure}

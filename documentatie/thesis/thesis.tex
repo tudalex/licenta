@@ -1,5 +1,7 @@
 \documentclass{thesis.cs.pub.ro}
 \usepackage{arrayjobx} % array macros needed for first page
+\usepackage[ampersand]{easylist}
+\usepackage{placeins}
 
 \makeindex
 \begin{document}
@@ -13,8 +15,9 @@
 \input{template/titlepage.ro}
 \input{template/titlepage.en}
 
+
 \begin{acknowledgements}
-\input{src/base/acknowledgements}
+%\input{src/base/acknowledgements}
 \end{acknowledgements}
 
 \begin{abstract}
@@ -28,7 +31,8 @@
 \end{frontmatter} % end roman numbering
 
 % 1.5 linespacing for the contents
-\onehalfspacing
+%\onehalfspacing
+\setstretch{1.15}
 
 \input{src/main}
 

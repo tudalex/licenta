@@ -1,4 +1,12 @@
 \chapter{Results}
 \label{chapter:Chapter 5}
 
+In the end the game engine can run a simple game with rendering power not being a issue. The only real problem is CPU compute power due to the fact that JavaScript is slower than C/C++ and memory utilization since JavaScript doesn’t expose an API through which you can control memory allocation and deallocation. 
 
+The engine uses a deferred renderer in WebGL, which is something that not all engines out there manage to do. Due to a limit in the number and quality of the render targets offered there isn't enough room to transfer material information, so maybe a different approach like Light Index Deferred Rendering would be more suited.
+
+As WebGL will run on desktop devices the memory bandwidth is not a big issue as it is on low power embedded devices and also the size of the video memory isn't an issue, so the engine goes away with loading all the scene in video ram before rendering. If this becomes a problem it can easily be fixed by streaming the required resources on demand.
+
+The main problem is still the limitation of the API and the way it is implemented, all calls needing to be checked for security reasons which lowers the number of WebGL calls per second that the engine can do.
+
+The APIs that HTML5 offer are enough to be able to implement any type of games on the web. They offer support for everything that is needed, like gamepad access, mouse locking, audio playback, video playback, video and audio recording and even screen capture. Some of these APIs might not have the most efficient implementation mostly due to security concerns and also create barriers for users to use them (e.g. mouse locking requires that the user give it's permission).
