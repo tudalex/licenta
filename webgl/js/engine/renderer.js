@@ -15,7 +15,8 @@ AssimpScene.prototype.init = function() {
     "use strict";
     var gl = this.gl;
     var i, j, mesh, material, key;
-    for (i in this.data.meshes) { //jshint ignore:line
+
+    for (i = 0; i < this.data.meshes.length; ++i) { //jshint ignore:line
         mesh = this.data.meshes[i];
         mesh.vertexBuffer = gl.createBuffer();
         gl.bindBuffer(gl.ARRAY_BUFFER, mesh.vertexBuffer);
@@ -32,23 +33,17 @@ AssimpScene.prototype.init = function() {
         gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(mesh.normals), gl.STATIC_DRAW);
     }
 
-    for (i in this.data.materials) {
+    for (i = 0; i < this.data.materials.length; ++i) {
         material = this.data.materials[i];
         material.mat = {};
         material.tex = {};
         material.clr = {};
         for (j in material.properties) {
             key = material.properties[j].key.slice(1).split('.');
-            //console.log(key);
             material[key[0]][key[1]] = material.properties[j].value;
         }
-//        for (j in material.clr) {
-//            console.log(j);
-//            //gl.
-//        }
         delete material.properties;
     }
-    console.dir(this);
 };
 
 
@@ -104,13 +99,17 @@ AssimpScene.prototype.draw = function(shaderProgram, mvMatrix, node) {
 function Renderer(canvas_id, stats, timer, engine) {
     "use strict";
 
-    window.requestAnimationFrame = window.requestAnimationFrame || window.mozRequestAnimationFrame ||
-        window.webkitRequestAnimationFrame || window.msRequestAnimationFrame;
-    this.canvas = document.getElementById(canvas_id);
+    window.requestAnimationFrame = window.requestAnimationFrame
+        || window.mozRequestAnimationFrame
+        || window.webkitRequestAnimationFrame
+        || window.msRequestAnimationFrame;
 
-    if (!this.initGL(this.canvas)) {
-        return;
+    this.canvas = document.getElementById(canvas_id);
+    if (!this.canvas) {
+        throw new Error("Could not find canvas");
     }
+
+    this.initGL(this.canvas);
 
     this.timer = timer;
     if (stats)
@@ -138,36 +137,32 @@ function Renderer(canvas_id, stats, timer, engine) {
     this.gl.enable(this.gl.DEPTH_TEST);
 
     this.currCamera = new Camera(engine);
+    this.currScene = {
+        draw: function() {}
+    };
 }
 
 Renderer.prototype.initGL = function(canvas) {
-    try {
-        this.rawgl = canvas.getContext("experimental-webgl") || canvas.getContext("webgl");
-    }
-    catch (e) {
-        window.alert("WebGL couldn't be initialized.");
-        throw e;
-    }
+    this.rawgl = canvas.getContext("experimental-webgl")
+        || canvas.getContext("webgl");
 
     if (!this.rawgl) {
-        console.error("Unable to load webgl");
-        return;
+        throw new Error("Unable to load webgl");
     }
+
     function logGLCall(functionName, args) {
         console.log("gl." + functionName + "(" +
             WebGLDebugUtils.glFunctionArgsToString(functionName, args) + ")");
     }
 
     this.gl = this.rawgl;
-//    this.gl = WebGLDebugUtils.makeDebugContext(this.rawgl, undefined, logGLCall);
-//    this.gl = WebGLDebugUtils.makeDebugContext(this.rawgl);
+    //this.gl = WebGLDebugUtils.makeDebugContext(this.rawgl, undefined, logGLCall);
+    //this.gl = WebGLDebugUtils.makeDebugContext(this.rawgl);
 
-    console.dir(this.gl.getSupportedExtensions());
+    //console.dir(this.gl.getSupportedExtensions());
     this.extDepth = this.gl.getExtension("WEBGL_depth_texture");
     this.extDraw = this.gl.getExtension("WEBGL_draw_buffers");
     this.extFloat = this.gl.getExtension("OES_texture_float");
-
-    return this.gl;
 };
 
 
@@ -175,7 +170,8 @@ Renderer.prototype.createShader = function(name, type) {
     "use strict";
     var gl = this.gl;
 
-    var url = 'shaders/' + name + '.' + (type == gl.VERTEX_SHADER ? 'vs' : 'fs');
+    var url = 'shaders/' + name + '.'
+        + (type == gl.VERTEX_SHADER ? 'vs' : 'fs');
 
     return ajax(url, 'text')
         .then(function(e) {
@@ -183,7 +179,8 @@ Renderer.prototype.createShader = function(name, type) {
             gl.shaderSource(shader, e.target.response);
             gl.compileShader(shader);
             if (!gl.getShaderParameter(shader, gl.COMPILE_STATUS)) {
-                var msg = "An error occurred compiling '" + url + "'\n" + gl.getShaderInfoLog(shader);
+                var msg = "An error occurred compiling '"
+                    + url + "'\n" + gl.getShaderInfoLog(shader);
                 throw new Error(msg);
             }
             return shader;
@@ -236,6 +233,8 @@ Renderer.prototype.loadGeometryPassProg = function() {
             program.mMatUniform = gl.getUniformLocation(program, "uMmat");
             program.vMatUniform = gl.getUniformLocation(program, "uVmat");
 
+            program.samplers = [];
+
             this.geometryPassProg = program;
             return program;
         });
@@ -256,6 +255,10 @@ Renderer.prototype.loadLightPassProg = function() {
 
             program.pMatUniform = gl.getUniformLocation(program, "uPmat");
             program.resolutionUniform = gl.getUniformLocation(program, "resolution");
+
+            program.samplers = _.range(4).map(function(i) {
+                return gl.getUniformLocation(program, "uSampler" + i);
+            });
 
             this.lightPassProg = program;
             return program;
@@ -390,10 +393,6 @@ Renderer.prototype.drawScene = function() {
     "use strict";
     var gl = this.gl;
 
-    if (!this.currScene) {
-        return;
-    }
-
     gl.enable(gl.DEPTH_TEST);
     this.shaderProgram = this.geometryPassProg;
     gl.useProgram(this.shaderProgram);
@@ -436,12 +435,9 @@ Renderer.prototype.drawScene = function() {
     gl.activeTexture(gl.TEXTURE3);
     gl.bindTexture(gl.TEXTURE_2D, this.normal);
 
-    var i;
-    for (i = 0; i < 4; ++i) {
-        var location = gl.getUniformLocation(this.shaderProgram, "uSampler" + i);
-        //console.log("" + i + " " + location );
+    this.shaderProgram.samplers.map(function(location, i) {
         gl.uniform1i(location, i);
-    }
+    });
 
     this.setMatrixUniform();
     this.drawFullScreenQuad();
