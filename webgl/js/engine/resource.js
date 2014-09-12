@@ -5,36 +5,24 @@
 
 function ResourceManager() {
     "use strict";
-
 }
 
-ResourceManager.prototype.xhrLoadBinary = function(url, callback, type) {
-    "use strict";
-    //TODO: Implement a more feature complete loader
-    var req = new XMLHttpRequest();
-    req.open("GET", url, true);
-    req.responseType = "arraybuffer";
-    req.onload = function(data) {
-        callback(req.response, req.responseType);
-    };
-    req.send();
+ResourceManager.prototype.load = function(path) {
+    return this.sceneData.file(path).asText();
 };
 
-ResourceManager.prototype.load = function (url, callback) {
-    return this.currentData.file(url).asText();
-};
-
-ResourceManager.prototype.loadDataZip = function (data_path, callback) {
-    this.xhrLoadBinary(data_path, function(data) {
-        this.currentData = new JSZip(data);
-        callback();
-    }.bind(this));
+ResourceManager.prototype.loadZip = function(url) {
+    return ajax(url, "arraybuffer").bind(this)
+        .then(function(e) {
+            var zip = new JSZip(e.target.response);
+            this.sceneData = zip;
+            return zip;
+        });
 };
 
 ResourceManager.prototype.loadObject = function(url) {
     "use strict";
     var data = JSON.parse(this.load(url));
-    console.log(data);
     return data;
 };
 

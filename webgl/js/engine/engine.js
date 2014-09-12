@@ -25,7 +25,6 @@ function Engine(canvas_id) {
     //TODO(tudalex): Fix it and make the renderer use the resource manager from the engine
     this.manager = this.renderer.manager;
     this.mainLoop = this.mainLoop.bind(this);
-    console.dir(this);
 
     this.renderer.loadShaderPrograms()
         .then(this.mainLoop);
@@ -41,16 +40,13 @@ Engine.prototype.initStats = function() {
 };
 
 /** @export */
-Engine.prototype.loadGameData = function(dataPath, callback) {
+Engine.prototype.loadGameData = function(path) {
     "use strict";
-    this.manager.loadDataZip(dataPath, function() {
-        var manifest = this.manager.loadObject("manifest.json");
-        //console.log("Manifest", manifest);
-        this.loadScene(manifest.main_scene);
-        if (typeof callback === "function") {
-            callback();
-        }
-    }.bind(this));
+    return this.manager.loadZip(path).bind(this)
+        .then(function() {
+            var manifest = this.manager.loadObject("manifest.json");
+            this.loadScene(manifest.main_scene);
+        });
 };
 
 /** @export */
@@ -58,13 +54,11 @@ Engine.prototype.loadScene = function(scene) {
     "use strict";
     var data = this.renderer.manager.loadObject(scene);
     this.renderer.currScene = new AssimpScene(data, this.renderer.gl, this.timer);
-    console.log(data);
 };
 
 Engine.prototype.mainLoop = function() {
     "use strict";
 
-    //console.warn('in main loop!!!!');
     if (this.stats) {
         this.stats.begin();
     }
@@ -74,5 +68,6 @@ Engine.prototype.mainLoop = function() {
     if (this.stats) {
         this.stats.end();
     }
+
     window.requestAnimationFrame(this.mainLoop, this.renderer.canvas);
 };
