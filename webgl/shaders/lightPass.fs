@@ -94,5 +94,5 @@ void main(void) {
     //gl_FragColor = vec4(vec3(depth), 1.0);
     //gl_FragColor = vec4(vec3(pow(depth1-depth, 200.)), 1.0);
 
-    //gl_FragColor = vec4(normal, 1.0);
+    gl_FragColor = vec4(normal, 1.0);
 }

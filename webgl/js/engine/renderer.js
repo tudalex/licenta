@@ -141,6 +141,7 @@ function Renderer(canvas_id, stats, timer, engine) {
 }
 
 Renderer.prototype.initGL = function(canvas) {
+    "use strict";
     try {
         this.rawgl = canvas.getContext("experimental-webgl") || canvas.getContext("webgl");
     }
@@ -160,13 +161,15 @@ Renderer.prototype.initGL = function(canvas) {
 
     this.gl = this.rawgl;
 //    this.gl = WebGLDebugUtils.makeDebugContext(this.rawgl, undefined, logGLCall);
-//    this.gl = WebGLDebugUtils.makeDebugContext(this.rawgl);
+    this.gl = WebGLDebugUtils.makeDebugContext(this.rawgl);
 
     console.dir(this.gl.getSupportedExtensions());
     this.extDepth = this.gl.getExtension("WEBGL_depth_texture");
     this.extDraw = this.gl.getExtension("WEBGL_draw_buffers");
     this.extFloat = this.gl.getExtension("OES_texture_float");
+    this.extFloatLinear = this.gl.getExtension("OES_texture_float_linear");
 
+    window.gl = this.gl;
     return this.gl;
 };
 
@@ -270,14 +273,14 @@ Renderer.prototype.loadShaderPrograms = function() {
     ];
 
     return Promise.all(programs);
-}
+};
 
 Renderer.prototype.initFB = function() {
     "use strict";
 
     var gl = this.gl;
     this.fbo = gl.createFramebuffer();
-    this.intermediate = this.createFBTexture(gl.RGBA, gl.UNSIGNED_BYTE);
+    this.intermediate = this.createFBTexture(gl.RGBA, gl.FLOAT);
     this.depthText = this.createFBTexture(gl.DEPTH_COMPONENT, gl.UNSIGNED_INT);
     this.depthPrec = this.createFBTexture(gl.RGBA, gl.FLOAT);
     this.normal = this.createFBTexture(gl.RGBA, gl.FLOAT);
@@ -307,6 +310,31 @@ Renderer.prototype.renderObject = function() {
     "use strict";
 };
 
+Renderer.prototype.checkFramebufferStatus = function() {
+    "use strict";
+    var gl = this.gl;
+    var status = gl.checkFramebufferStatus(gl.FRAMEBUFFER);
+    switch (status) {
+        case gl.FRAMEBUFFER_COMPLETE:
+            break;
+        case gl.FRAMEBUFFER_INCOMPLETE_ATTACHMENT:
+            console.log("Incomplete framebuffer: FRAMEBUFFER_INCOMPLETE_ATTACHMENT");
+            break;
+        case gl.FRAMEBUFFER_INCOMPLETE_MISSING_ATTACHMENT:
+            console.log("Incomplete framebuffer: FRAMEBUFFER_INCOMPLETE_MISSING_ATTACHMENT");
+            break;
+        case gl.FRAMEBUFFER_INCOMPLETE_DIMENSIONS:
+            console.log("Incomplete framebuffer: FRAMEBUFFER_INCOMPLETE_DIMENSIONS");
+            break;
+        case gl.FRAMEBUFFER_UNSUPPORTED:
+            throw("Incomplete framebuffer: FRAMEBUFFER_UNSUPPORTED");
+            break;
+        default:
+            throw("Incomplete framebuffer: " + status);
+    }
+};
+
+
 Renderer.prototype.createFBTexture = function(type, size, type2) {
     "use strict";
     var gl = this.gl;
@@ -318,8 +346,8 @@ Renderer.prototype.createFBTexture = function(type, size, type2) {
     gl.bindTexture(gl.TEXTURE_2D, texture);
     gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
     gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
-    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
-    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, type === gl.FLOAT ? gl.LINEAR : gl.NEAREST);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, type === gl.FLOAT ? gl.LINEAR : gl.NEAREST);
     gl.texImage2D(gl.TEXTURE_2D, 0, type, gl.canvas.width, gl.canvas.height, 0, type2, size, null);
     return texture;
 };
@@ -399,13 +427,21 @@ Renderer.prototype.drawScene = function() {
     gl.useProgram(this.shaderProgram);
 
     gl.bindFramebuffer(gl.FRAMEBUFFER, this.fbo);
+
     this.extDraw.drawBuffersWEBGL(this.bufs);
 
-    gl.framebufferTexture2D(gl.FRAMEBUFFER, this.bufs[0], gl.TEXTURE_2D, this.intermediate, 0);
-    gl.framebufferTexture2D(gl.FRAMEBUFFER, this.bufs[1], gl.TEXTURE_2D, this.depthPrec, 0);
-    gl.framebufferTexture2D(gl.FRAMEBUFFER, this.bufs[2], gl.TEXTURE_2D, this.normal, 0);
+    //this.checkFramebufferStatus();
     gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.DEPTH_ATTACHMENT, gl.TEXTURE_2D, this.depthText, 0);
-    gl.viewport(0, 0, gl.canvas.width, gl.canvas.height);
+    //this.checkFramebufferStatus();
+    gl.framebufferTexture2D(gl.FRAMEBUFFER, this.bufs[0] , gl.TEXTURE_2D, this.intermediate, 0);
+    //this.checkFramebufferStatus();
+    gl.framebufferTexture2D(gl.FRAMEBUFFER, this.bufs[1] , gl.TEXTURE_2D, this.depthPrec, 0);
+    //this.checkFramebufferStatus();
+    gl.framebufferTexture2D(gl.FRAMEBUFFER, this.bufs[2] , gl.TEXTURE_2D, this.normal, 0);
+
+
+    //gl.viewport(0, 0, gl.canvas.width, gl.canvas.height);
+
     gl.clear(this.gl.COLOR_BUFFER_BIT | this.gl.DEPTH_BUFFER_BIT);
 
     this.currCamera.animate();
@@ -418,10 +454,10 @@ Renderer.prototype.drawScene = function() {
 
     this.shaderProgram = this.lightPassProg;
     gl.bindFramebuffer(gl.FRAMEBUFFER, null);
-    //this.extDraw.drawBuffersWEBGL(null);
+
     gl.disable(gl.DEPTH_TEST);
-    //gl.disable(gl.STENCIL_TEST);
-    //gl.clear(this.gl.COLOR_BUFFER_BIT | this.gl.DEPTH_BUFFER_BIT);
+    gl.disable(gl.STENCIL_TEST);
+    gl.clear(this.gl.COLOR_BUFFER_BIT | this.gl.DEPTH_BUFFER_BIT);
 
     gl.useProgram(this.shaderProgram);
     gl.activeTexture(gl.TEXTURE0);
