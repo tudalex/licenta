@@ -33,27 +33,35 @@ function SceneObject(mesh) {
     this.scale[1] = 1;
     this.scale[2] = 1;
     this.gl = undefined;
+    this.physics = undefined;
+    this.physicsBody = undefined;
     this.mMat = mat4.create();
-    this.version = 0;
-    this.matVersion = -1;
     this.texture = -1;
 }
 
 SceneObject.prototype.updateModelMat = function() {
+    if (this.physics !== undefined) {
+        var ret = this.physics.readObjectPosition(this.physicsBody);
+        this.position = ret[0];
+        this.rotation = ret[1];
+    }
     mat4.fromRotationTranslation(this.mMat, this.rotation, this.position);
-    this.matVersion = this.version;
 };
 
 SceneObject.prototype.setPosition = function(newPosition) {
     "use strict";
     this.position = newPosition;
-    this.version += 1;
 };
 
 SceneObject.prototype.setRotation = function(newRotation) {
     "use strict";
     this.rotation = newRotation;
-    this.version += 1;
+};
+
+SceneObject.prototype.initPhysics = function (physics, shape) {
+    this.physics = physics;
+    var p = this.position;
+    this.physicsBody = physics.createBody(1, new Ammo.btVector3(p[0], p[1], p[2]), shape);
 };
 
 SceneObject.prototype.initGl = function(gl) {
@@ -88,8 +96,6 @@ SceneObject.prototype.initGl = function(gl) {
             gl.bindTexture(gl.TEXTURE_2D, null);
             this.texture = texture;
         }.bind(this));
-
-
     }
 };
 
@@ -98,9 +104,8 @@ SceneObject.prototype.draw = function(shaderProgram) {
     "use strict";
     var gl = this.gl;
     var mesh = this.mesh;
-    if (this.version !== this.matVersion) {
-        this.updateModelMat();
-    }
+    this.updateModelMat();
+
     gl.uniformMatrix4fv(shaderProgram.mMatUniform, false, this.mMat);
 
     gl.bindBuffer(gl.ARRAY_BUFFER, mesh.vertexBuffer);

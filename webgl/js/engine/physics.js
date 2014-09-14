@@ -17,7 +17,7 @@ Physics.prototype.init = function() {
     this.dynamicsWorld.setGravity(new Ammo.btVector3(0, -10, 0));
 
     this.bodies = [];
-    this.ground = this.createBody(0, new Ammo.btVector3(0, -10, 0), new Ammo.btBoxShape(new Ammo.btVector3(1, 1, 1)));
+    this.ground = this.createBody(0, new Ammo.btVector3(0, -50, 0), new Ammo.btBoxShape(new Ammo.btVector3(1000, 1, 1000)));
     //this.bodies = [];
     //his.createBody(0, new Ammo.btVector3(0, -100, 0), Ammo.btStaticPlaneShape(new Ammo.btVector3(0, 1, 0), 1));
     // Testing stuff
@@ -34,11 +34,15 @@ Physics.prototype.setUpTest = function() {
 };
 
 
-Physics.prototype.createBody = function(mass, origin, shape) {
+Physics.prototype.createBody = function(mass, origin, shape, rotation) {
     "use strict";
     var transform = new Ammo.btTransform();
+    if (rotation === undefined) {
+        rotation = new Ammo.btQuaternion(0, 0, 0, 1);
+    }
     transform.setIdentity();
     transform.setOrigin(origin);
+    transform.setRotation(rotation);
     var localInertia = new Ammo.btVector3(0, 0, 0);
     shape.calculateLocalInertia(mass, localInertia);
     var myMotionState = new Ammo.btDefaultMotionState(transform);
@@ -50,7 +54,7 @@ Physics.prototype.createBody = function(mass, origin, shape) {
     return body;
 };
 
-Physics.prototype.readObjectPosition = function (object, i) {
+Physics.prototype.readObjectPosition = function (object) {
     "use strict";
     //console.dir(object);
     var transform = new Ammo.btTransform();
@@ -61,10 +65,8 @@ Physics.prototype.readObjectPosition = function (object, i) {
     var rot = quat.fromValues(rotation.x(), rotation.y(), rotation.z(), rotation.w());
     var ret = mat4.fromRotationTranslation(mat4.create(), rot, pos);
 
-
-    //console.log(i+": ",pos, rot);
-
     Ammo.destroy(transform);
+    return [pos, rot];
 };
 
 Physics.prototype.decomposeMatrix = function (m) {
@@ -125,10 +127,11 @@ Physics.prototype.step = function() {
     "use strict";
     var newPhysicsScene = {};
     var i, bodies = this.bodies;
-//    for (i = 0; i < 300; ++i) {
-//        this.dynamicsWorld.stepSimulation(1.0 / 60.0, 10);
+
+    this.dynamicsWorld.stepSimulation(1.0 / 60.0, 10);
 //        _.map(bodies, this.readObjectPosition);
-//    }
+
+
     //for (i = 0; i < this.this.bodies)
    // throw new Error("a");
 };

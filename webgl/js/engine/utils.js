@@ -1,4 +1,5 @@
 function ajax(url, responseType) {
+    "use strict";
     return new Promise(function (resolve, reject) {
         var xhr = new XMLHttpRequest;
         xhr.addEventListener("error", reject);
@@ -11,11 +12,12 @@ function ajax(url, responseType) {
 }
 
 function loadImage(path) {
+    "use strict";
     return new Promise(function (resolve, reject) {
         var img = new Image();
         img.addEventListener("error", reject);
         img.addEventListener("load", resolve);
         img.src = path;
-        document.body.appendChild(img);
+        //document.body.appendChild(img);
     });
 }
