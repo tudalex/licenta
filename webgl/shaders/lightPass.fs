@@ -1,4 +1,130 @@
 precision highp float;
+
+struct BaseLight {
+    vec3 color;
+    float ambientIntensity;
+    float diffuseIntensity;
+};
+
+struct DirectionalLight {
+    BaseLight base;
+    vec3 direction;
+};
+
+struct Attenuation {
+    float constant;
+    float linear;
+    float exp;
+};
+
+struct PointLight {
+    BaseLight base;
+    vec3 position;
+    Attenuation atten;
+};
+
+struct SpotLight {
+    PointLight base;
+    vec3 direction;
+    float cutoff;
+};
+
+
+uniform DirectionalLight gDirectionalLight;
+uniform PointLight gPointLight;
+uniform SpotLight gSpotLight;
+
+
+uniform float gMatSpecularIntensity;
+uniform float gMatSpecularPower;
+
+
+vec4 calcLightInternal(
+                BaseLight light,
+                vec3 lightDirection,
+                vec3 fragEyePos,
+                vec3 normal)
+{
+    vec4 ambientColor = vec4(light.color, 1.0) * light.ambientIntensity;
+    float diffuseFactor = dot(normal, -lightDirection);
+
+    vec4 diffuseColor  = vec4(0);
+    vec4 specularColor = vec4(0);
+
+    if (diffuseFactor > 0.0) {
+        diffuseColor = vec4(light.color, 1.0) * light.diffuseIntensity * diffuseFactor;
+
+        vec3 fragToEye = normalize(-fragEyePos);
+        vec3 lightReflect = normalize(reflect(lightDirection, normal));
+        float specularFactor = dot(fragToEye, lightReflect);
+        specularFactor = pow(specularFactor, gMatSpecularPower);
+        if (specularFactor > 0.0) {
+            specularColor = vec4(light.Color, 1.0) * gMatSpecularIntensity * specularFactor;
+        }
+    }
+
+    return ambientColor + diffuseColor + specularColor;
+}
+
+vec4 calcDirectionalLight(
+                DirectionalLight directionalLight,
+                vec3 fragEyePos,
+                vec3 Normal)
+{
+    return calcLightInternal(
+                directionalLight.base,
+			    directionalLight.direction,
+	    		fragEyePos,
+    			normal);
+}
+
+vec4 calcPointLight(
+                PointLight pointLight,
+                vec3 fragEyePos,
+                vec3 Normal)
+{
+    vec3 lightDirection = -pointLight.position;
+    float distance = length(lightDirection);
+    lightDirection = normalize(lightDirection);
+
+    vec4 color = CalcLightInternal(
+                pointLight.base,
+                lightDirection,
+                fragEyePos,
+                normal);
+
+    float attenuation =
+                gPointLight.atten.aonstant +
+                gPointLight.atten.linear * distance +
+                gPointLight.atten.exp * distance * distance;
+
+    attenuation = max(1.0, attenuation);
+
+    return color / attenuation;
+}
+
+
+vec4 CalcSpotLight(
+                SpotLight spotLight,
+                vec4 fragEyePos,
+                vec3 normal)                            
+{                                                                                           
+    vec3 lightToPixel = normalize(fragEyePos - l.base.position);                             
+    float spotFactor = dot(lightToPixel, spotLight.direction);                                      
+                                                                                            
+    if (spotFactor > spotLight.cutoff) {                                                            
+        vec4 color = calcPointLight(
+                spotLight.base,
+                fragEyePos,
+                normal);
+                                         
+        return color * (1.0 - (1.0 - spotFactor) * 1.0/(1.0 - spotLight.cutoff));                   
+    }                                                                                       
+    else {                                                                                  
+        return vec4(0);                                                               
+    }                                                                                       
+}  
+
 varying vec2 vRay;
 
 uniform sampler2D uSampler0;

@@ -118,6 +118,22 @@ function Renderer(canvas_id, stats, timer, engine) {
     this.manager = new ResourceManager();
     engine.renderer = this;
 
+    this.initMat();
+    this.initFullScreenQuad();
+    this.initFB();
+
+    this.initLightVolumes();
+
+    this.currCamera = new Camera(engine);
+    this.currScene = {
+        draw: function() {}
+    };
+
+    this.gl.clearColor(0.0, 0.0, 0.0, 1.0);
+    this.gl.enable(this.gl.DEPTH_TEST);
+}
+
+Renderer.prototype.initMat = function() {
     this.pMat = mat4.create();
     this.pInvMatrix = mat4.create();
     this.mMat = mat4.create();
@@ -128,18 +144,6 @@ function Renderer(canvas_id, stats, timer, engine) {
     mat4.invert(this.pInvMatrix, this.pMat);
     mat4.identity(this.mMat);
     mat4.lookAt(this.vMat, [0, 0, 120], [0, 0, 0], [0, 1, 0]);
-
-    this.initFullScreenQuad();
-    this.initFB();
-
-
-    this.gl.clearColor(0.0, 0.0, 0.0, 1.0);
-    this.gl.enable(this.gl.DEPTH_TEST);
-
-    this.currCamera = new Camera(engine);
-    this.currScene = {
-        draw: function() {}
-    };
 }
 
 Renderer.prototype.initGL = function(canvas) {
@@ -240,6 +244,29 @@ Renderer.prototype.loadGeometryPassProg = function() {
         });
 };
 
+
+Renderer.prototype.loadNullPassProg = function() {
+    "use strict";
+    var gl = this.gl;
+    return this.createProgram('nullPass')
+        .then(function(program) {
+            gl.useProgram(program);
+
+            program.vertexPositionAttrib = gl.getAttribLocation(program, "aVertexPosition");
+
+            gl.enableVertexAttribArray(program.vertexPositionAttrib);
+
+            program.pMatUniform = gl.getUniformLocation(program, "uPmat");
+            program.mMatUniform = gl.getUniformLocation(program, "uMmat");
+            program.vMatUniform = gl.getUniformLocation(program, "uVmat");
+
+            program.samplers = [];
+
+            this.nullPassProg = program;
+            return program;
+        });
+};
+
 Renderer.prototype.loadLightPassProg = function() {
     "use strict";
     var gl = this.gl;
@@ -268,6 +295,7 @@ Renderer.prototype.loadLightPassProg = function() {
 Renderer.prototype.loadShaderPrograms = function() {
     "use strict";
     var programs = [
+        this.loadNullPassProg(),
         this.loadGeometryPassProg(),
         this.loadLightPassProg()
     ];
@@ -292,10 +320,7 @@ Renderer.prototype.initFB = function() {
     }
 };
 
-Renderer.prototype.drawBuffer = function(buffer) {
-    "use strict";
-    var gl = this.gl;
-};
+
 
 Renderer.prototype.setMatrixUniform = function() {
     "use strict";
@@ -306,9 +331,7 @@ Renderer.prototype.setMatrixUniform = function() {
     gl.uniform2fv(this.shaderProgram.resolutionUniform, [gl.canvas.width, gl.canvas.height]);
 };
 
-Renderer.prototype.renderObject = function() {
-    "use strict";
-};
+
 
 Renderer.prototype.createFBTexture = function(type, size, type2) {
     "use strict";
@@ -368,8 +391,6 @@ Renderer.prototype.initFullScreenQuad = function() {
         }
     }
 
-
-
     this.quadRayBuffer = gl.createBuffer();
     gl.bindBuffer(gl.ARRAY_BUFFER, this.quadRayBuffer);
     gl.bufferData(gl.ARRAY_BUFFER, quadRayData, gl.STATIC_DRAW);
@@ -387,6 +408,47 @@ Renderer.prototype.drawFullScreenQuad = function() {
 
     gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
 
+};
+
+
+Renderer.prototype.initLightVolumes = function() {
+    "use strict";
+    var gl = this.gl;
+
+    var sphere = buildSphere(2);
+    var cone = buildCone(64);
+
+    this.lightVolumes = {
+        sphere: createBuffers(sphere),
+        cone: createBuffers(cone)
+    };
+
+    function createBuffers(mesh) {
+        var vertBuff = gl.createBuffer();
+        gl.bindBuffer(gl.ARRAY_BUFFER, vertBuff);
+        gl.bufferData(gl.ARRAY_BUFFER, mesh.vertices, gl.STATIC_DRAW);
+
+        var indBuff = gl.createBuffer();
+        gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, indBuff);
+        gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, mesh.indices, gl.STATIC_DRAW);
+
+        return {
+            vertexBuffer: vertBuff,
+            indexBuffer: indBuff,
+            indexLength: mesh.indices.length
+        }
+    }
+};
+
+Renderer.prototype.drawLightVolume = function(mesh) {
+    "use strict";
+    var gl = this.gl;
+
+    gl.bindBuffer(gl.ARRAY_BUFFER, mesh.vertexBuffer);
+    gl.vertexAttribPointer(this.shaderProgram.vertexPositionAttrib, 3, gl.FLOAT, false, 0, 0);
+
+    gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, mesh.indexBuffer);
+    gl.drawElements(gl.TRIANGLES, mesh.indexLength, gl.UNSIGNED_SHORT, 0);
 };
 
 Renderer.prototype.drawScene = function() {
@@ -441,4 +503,18 @@ Renderer.prototype.drawScene = function() {
 
     this.setMatrixUniform();
     this.drawFullScreenQuad();
+
+    this.shaderProgram = this.nullPassProg;
+    gl.useProgram(this.shaderProgram);
+    this.drawLightVolume(this.lightVolumes.cone);
+};
+
+Renderer.prototype.drawBuffer = function(buffer) {
+    "use strict";
+    var gl = this.gl;
+};
+
+
+Renderer.prototype.renderObject = function() {
+    "use strict";
 };
