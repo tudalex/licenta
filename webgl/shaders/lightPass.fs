@@ -72,7 +72,7 @@ void main(void) {
     vec4 normalTex = vec4(texture2D(normalSampler, gl_FragCoord.xy / resolution));
     vec3 normal = decode(vec4(unpack2(normalTex.xy), unpack2(normalTex.zw), 0, 0));
     gl_FragColor = vec4(normal, 1.0);
-
+	vec4 texture = vec4(texture2D(intermSampler, gl_FragCoord.xy / resolution));
     highp float depth = decode32(texture2D(depthPrecSampler, gl_FragCoord.xy / resolution)) ;
     //depth = depth * 0.5 + 0.5;
     //depth = 2.0 * depth - 1.0;
@@ -89,10 +89,12 @@ void main(void) {
     vec3 eyePos = vec3(vRay, 1.0) * depth / 50.;
 
     gl_FragColor = vec4(eyePos, 1.0);
+	//gl_FragColor = vec4(1., 1., 1., 1.);
 
     depth = 1. - (-depth - 1.0) / 1000.;
     //gl_FragColor = vec4(vec3(depth), 1.0);
     //gl_FragColor = vec4(vec3(pow(depth1-depth, 200.)), 1.0);
 
-    gl_FragColor = vec4(normal, 1.0);
+    //gl_FragColor = vec4(normal, 1.0);
+	gl_FragColor = texture;
 }

@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title> Turtle Engine </title>
+</head>
+<body>
+    <canvas width="512px" height="512px" id="test"></canvas>
+
+
+    <!-- Vendor -->
+    <script type="application/javascript" src="js/vendor/lodash.js"></script>
+    <script type="application/javascript" src="js/vendor/bluebird.js"></script>
+    <script type="application/javascript" src="js/vendor/gl-matrix.js"></script>
+    <script type="application/javascript" src="js/vendor/ammo.js"></script>
+    <script type="application/javascript" src="js/vendor/jszip.js"></script>
+    <script type="application/javascript" src="js/vendor/stats.min.js"></script>
+
+    <script src="js/vendor/webgl-debug.js"></script>
+
+
+    <!-- Engine -->
+    <script type="application/javascript" src="js/engine/utils.js"></script>
+    <script type="application/javascript" src="js/engine/timer.js"></script>
+    <script type="application/javascript" src="js/engine/physics.js"></script>
+    <script type="application/javascript" src="js/engine/resource.js"></script>
+    <script type="application/javascript" src="js/engine/primitives.js"></script>
+    <script type="application/javascript" src="js/engine/camera.js"></script>
+    <script type="application/javascript" src="js/engine/renderer.js"></script>
+    <script type="application/javascript" src="js/engine/input.js"></script>
+    <script type="application/javascript" src="js/engine/engine.js"></script>
+
+
+    <script type="application/javascript">
+        agliEmbedDebug = true;
+    </script>
+    <script type="text/javascript" src="inspector/core/embed.js"></script>
+
+
+    <script type="application/javascript">
+        var engine;
+        window.addEventListener('load', function(){
+            engine = new Engine("test");
+            engine.loadGameData("webgl.zip").then(function() {
+                var scene = new Scene(engine.renderer.gl);
+                var box = ObjectFactory.getBox(loadImage("tex.jpg"));
+//                var box = ObjectFactory.getBox();
+                window.box = box;
+                window.scene = scene;
+                scene.addObject(box);
+                engine.renderer.currScene = scene;
+            });
+        });
+    </script>
+</body>
+</html>

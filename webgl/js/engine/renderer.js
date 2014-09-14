@@ -112,8 +112,9 @@ function Renderer(canvas_id, stats, timer, engine) {
     this.initGL(this.canvas);
 
     this.timer = timer;
-    if (stats)
+    if (stats) {
         this.stats = stats;
+    }
 
     this.manager = new ResourceManager();
     engine.renderer = this;
@@ -143,6 +144,7 @@ function Renderer(canvas_id, stats, timer, engine) {
 }
 
 Renderer.prototype.initGL = function(canvas) {
+    "use strict";
     this.rawgl = canvas.getContext("experimental-webgl")
         || canvas.getContext("webgl");
 
@@ -156,8 +158,8 @@ Renderer.prototype.initGL = function(canvas) {
     }
 
     this.gl = this.rawgl;
-    //this.gl = WebGLDebugUtils.makeDebugContext(this.rawgl, undefined, logGLCall);
-    //this.gl = WebGLDebugUtils.makeDebugContext(this.rawgl);
+//    this.gl = WebGLDebugUtils.makeDebugContext(this.rawgl, undefined, logGLCall);
+    this.gl = WebGLDebugUtils.makeDebugContext(this.rawgl);
 
     //console.dir(this.gl.getSupportedExtensions());
     this.extDepth = this.gl.getExtension("WEBGL_depth_texture");
@@ -174,8 +176,7 @@ Renderer.prototype.createShader = function(name, type) {
     "use strict";
     var gl = this.gl;
 
-    var url = 'shaders/' + name + '.'
-        + (type == gl.VERTEX_SHADER ? 'vs' : 'fs');
+    var url = 'shaders/' + name + '.' + (type === gl.VERTEX_SHADER ? 'vs' : 'fs');
 
     return ajax(url, 'text')
         .then(function(e) {
@@ -229,9 +230,11 @@ Renderer.prototype.loadGeometryPassProg = function() {
 
             program.vertexPositionAttrib = gl.getAttribLocation(program, "aVertexPosition");
             program.normalAttrib = gl.getAttribLocation(program, "aNormal");
+            program.texAttrib = gl.getAttribLocation(program, "aTextureCoord");
 
             gl.enableVertexAttribArray(program.vertexPositionAttrib);
             gl.enableVertexAttribArray(program.normalAttrib);
+            gl.enableVertexAttribArray(program.texAttrib);
 
             program.pMatUniform = gl.getUniformLocation(program, "uPmat");
             program.mMatUniform = gl.getUniformLocation(program, "uMmat");
@@ -408,12 +411,15 @@ Renderer.prototype.drawFullScreenQuad = function() {
     "use strict";
     var gl = this.gl;
 
-    gl.bindBuffer(gl.ARRAY_BUFFER, this.quadRayBuffer);
-    gl.vertexAttribPointer(this.shaderProgram.rayAttrib, 2, gl.FLOAT, false, 0, 0);
+    if (this.shaderProgram.rayAttrib !== -1) {
+        gl.bindBuffer(gl.ARRAY_BUFFER, this.quadRayBuffer);
+        gl.vertexAttribPointer(this.shaderProgram.rayAttrib, 2, gl.FLOAT, false, 0, 0);
+    }
 
-    gl.bindBuffer(gl.ARRAY_BUFFER, this.quadVertexBuffer);
-    gl.vertexAttribPointer(this.shaderProgram.vertexPositionAttrib, 3, gl.FLOAT, false, 0, 0);
-
+    if (this.shaderProgram.vertexPositionAttrib !== -1) {
+        gl.bindBuffer(gl.ARRAY_BUFFER, this.quadVertexBuffer);
+        gl.vertexAttribPointer(this.shaderProgram.vertexPositionAttrib, 3, gl.FLOAT, false, 0, 0);
+    }
     gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
 
 };
@@ -421,7 +427,7 @@ Renderer.prototype.drawFullScreenQuad = function() {
 Renderer.prototype.drawScene = function() {
     "use strict";
     var gl = this.gl;
-
+    //console.log("Frame start");
     gl.enable(gl.DEPTH_TEST);
     this.shaderProgram = this.geometryPassProg;
     gl.useProgram(this.shaderProgram);

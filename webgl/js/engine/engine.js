@@ -3,8 +3,9 @@
  */
 
 /** @export */
-function Engine(canvas_id) {
+function Engine(canvas_id, frameCount) {
     "use strict";
+    this.frameCount = frameCount;
     this.timer = new Timer(16, false);
     this.timer.map(0, "DrawMesh");
     this.timer.map(1, "Draw");
@@ -21,7 +22,7 @@ function Engine(canvas_id) {
     this.input.defineAction('down', 'F');
     this.renderer = new Renderer(canvas_id, this.stats, this.timer, this);
 
-
+    this.physics = new Physics(this.render);
     //TODO(tudalex): Fix it and make the renderer use the resource manager from the engine
     this.manager = this.renderer.manager;
     this.mainLoop = this.mainLoop.bind(this);
@@ -64,10 +65,16 @@ Engine.prototype.mainLoop = function() {
     }
 
     this.renderer.drawScene();
-
+    this.physics.step();
     if (this.stats) {
         this.stats.end();
     }
-
-    window.requestAnimationFrame(this.mainLoop, this.renderer.canvas);
+    if (this.frameCount !== undefined) {
+        if (this.frameCount > 0) {
+            window.requestAnimationFrame(this.mainLoop, this.renderer.canvas);
+            this.frameCount -= 1;
+        }
+    } else {
+        window.requestAnimationFrame(this.mainLoop, this.renderer.canvas);
+    }
 };

@@ -64,8 +64,9 @@ vec4 encode(vec3 n) {
 void main(void) {
     //fs_Normal = normalize(fs_Normal);
     //gl_FragColor = texture2D(uSampler, vec2(vTextureCoord.s, vTextureCoord.t));vec4(1.0,1.0, 1.0, 1.0);
-    gl_FragData[0] = vec4(1.0, 1.0, 1.0, 1.0);
-    gl_FragData[1] = encode32(fs_Depth);
+    //gl_FragData[0] = vec4(1.0, 1.0, 1.0, 1.0);
+	gl_FragData[0] = texture2D(uSampler, vec2(vTextureCoord.s, vTextureCoord.t));
+    //gl_FragData[1] = encode32(fs_Depth);
 
     gl_FragData[2] = encode(fs_Normal);
     gl_FragData[3] = fs_WorldPos;
