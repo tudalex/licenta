@@ -79,6 +79,8 @@ Renderer.prototype.initGL = function(canvas) {
 
     createGlUniformObjectFactories(this.gl);
 
+    this.gl.enable(this.gl.CULL_FACE);
+    this.gl.cullFace(this.gl.BACK);
     window.gl = this.gl;
     return this.gl;
 };
@@ -245,7 +247,7 @@ Renderer.prototype.initLightVolumes = function() {
             vertexBuffer: vertBuff,
             indexBuffer: indBuff,
             indexLength: mesh.indices.length
-        }
+        };
     }
 };
 
