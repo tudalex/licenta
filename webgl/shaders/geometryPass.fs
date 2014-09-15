@@ -24,7 +24,9 @@ varying vec3 vNormal;
 //varying float vDepth;
 varying vec3 vWorldPos;
 
-uniform sampler2D uSampler;
+uniform sampler2D uSampler0;
+
+#define textureSampler uSampler0
 
 
 #define normalData      gl_FragData[2]
@@ -37,7 +39,7 @@ void main(void) {
     vec3 normal = normalize(vNormal);	
     normalData = encode(normal);
     
-    textureData = texture2D(uSampler, vTextureCoord.st);
+    textureData = texture2D(textureSampler, vTextureCoord.st);
     textureData = vec4(1.);
     
     worldPosData = vec4(normal, 1.);

@@ -260,7 +260,9 @@ Renderer.prototype.loadGeometryPassProg = function() {
             program.mMatUniform = gl.getUniformLocation(program, "uMmat");
             program.vMatUniform = gl.getUniformLocation(program, "uVmat");
 
-            program.samplers = [];
+            program.samplers = _.range(1).map(function(i) {
+                return gl.getUniformLocation(program, "uSampler" + i);
+            });
 
             this.geometryPassProg = program;
             return program;
