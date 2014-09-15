@@ -29,21 +29,18 @@ struct SpotLight {
     float cutoff;
 };
 
-
-uniform DirectionalLight gDirectionalLight;
-uniform PointLight gPointLight;
-uniform SpotLight gSpotLight;
-
-
-uniform float gMatSpecularIntensity;
-uniform float gMatSpecularPower;
+struct Material {
+    float specularIntensity;
+    float specularPower;   
+};
 
 
 vec4 calcLightInternal(
                 BaseLight light,
                 vec3 lightDirection,
                 vec3 fragEyePos,
-                vec3 normal)
+                vec3 normal,
+                Material mat)
 {
     vec4 ambientColor = vec4(light.color, 1.0) * light.ambientIntensity;
     float diffuseFactor = dot(normal, -lightDirection);
@@ -57,9 +54,9 @@ vec4 calcLightInternal(
         vec3 fragToEye = normalize(-fragEyePos);
         vec3 lightReflect = normalize(reflect(lightDirection, normal));
         float specularFactor = dot(fragToEye, lightReflect);
-        specularFactor = pow(specularFactor, gMatSpecularPower);
+        specularFactor = pow(specularFactor, mat.specularPower);
         if (specularFactor > 0.0) {
-            specularColor = vec4(light.Color, 1.0) * gMatSpecularIntensity * specularFactor;
+            specularColor = vec4(light.color, 1.0) * mat.specularIntensity * specularFactor;
         }
     }
 
@@ -69,34 +66,38 @@ vec4 calcLightInternal(
 vec4 calcDirectionalLight(
                 DirectionalLight directionalLight,
                 vec3 fragEyePos,
-                vec3 Normal)
+                vec3 normal,
+                Material mat)
 {
     return calcLightInternal(
                 directionalLight.base,
 			    directionalLight.direction,
 	    		fragEyePos,
-    			normal);
+    			normal,
+    			mat);
 }
 
 vec4 calcPointLight(
                 PointLight pointLight,
                 vec3 fragEyePos,
-                vec3 Normal)
+                vec3 normal,
+                Material mat)
 {
     vec3 lightDirection = -pointLight.position;
     float distance = length(lightDirection);
     lightDirection = normalize(lightDirection);
 
-    vec4 color = CalcLightInternal(
+    vec4 color = calcLightInternal(
                 pointLight.base,
                 lightDirection,
                 fragEyePos,
-                normal);
+                normal,
+                mat);
 
     float attenuation =
-                gPointLight.atten.aonstant +
-                gPointLight.atten.linear * distance +
-                gPointLight.atten.exp * distance * distance;
+                pointLight.atten.constant +
+                pointLight.atten.linear * distance +
+                pointLight.atten.exp * distance * distance;
 
     attenuation = max(1.0, attenuation);
 
@@ -106,17 +107,19 @@ vec4 calcPointLight(
 
 vec4 CalcSpotLight(
                 SpotLight spotLight,
-                vec4 fragEyePos,
-                vec3 normal)                            
+                vec3 fragEyePos,
+                vec3 normal,
+                Material mat)                            
 {                                                                                           
-    vec3 lightToPixel = normalize(fragEyePos - l.base.position);                             
+    vec3 lightToPixel = normalize(fragEyePos - spotLight.base.position);                             
     float spotFactor = dot(lightToPixel, spotLight.direction);                                      
                                                                                             
     if (spotFactor > spotLight.cutoff) {                                                            
         vec4 color = calcPointLight(
                 spotLight.base,
                 fragEyePos,
-                normal);
+                normal,
+                mat);
                                          
         return color * (1.0 - (1.0 - spotFactor) * 1.0/(1.0 - spotLight.cutoff));                   
     }                                                                                       
@@ -132,7 +135,7 @@ uniform sampler2D uSampler1;
 uniform sampler2D uSampler2;
 uniform sampler2D uSampler3;
 
-#define intermSampler       uSampler0
+#define textureSampler      uSampler0
 #define depthSampler        uSampler1
 #define depthPrecSampler    uSampler2
 #define normalSampler       uSampler3
@@ -140,6 +143,11 @@ uniform sampler2D uSampler3;
 uniform mat4 uPmat;
 uniform vec2 resolution;
 
+
+uniform Material uMat;
+uniform DirectionalLight uDirectionalLight;
+uniform PointLight uPointLight;
+uniform SpotLight uSpotLight;
 
 
 
@@ -156,29 +164,6 @@ float unpackFloatFromVec4 (const vec4 value) {
     return dot(value, bitSh);
 }
 
-highp vec4 encode32(highp float f) {
-    highp float e =5.0;
-
-    highp float F = abs(f);
-    highp float Sign = step(0.0,-f);
-    highp float Exponent = floor(log2(F));
-    highp float Mantissa = (exp2(- Exponent) * F);
-    Exponent = floor(log2(F) + 127.0) + floor(log2(Mantissa));
-    highp vec4 rgba;
-    rgba[0] = 128.0 * Sign  + floor(Exponent*exp2(-1.0));
-    rgba[1] = 128.0 * mod(Exponent,2.0) + mod(floor(Mantissa*128.0),128.0);
-    rgba[2] = floor(mod(floor(Mantissa*exp2(23.0 -8.0)),exp2(8.0)));
-    rgba[3] = floor(exp2(23.0)*mod(Mantissa,exp2(-15.0)));
-    return rgba;
-}
-
-highp float decode32(highp vec4 rgba) {
-    highp float Sign = 1.0 - step(128.0,rgba[0])*2.0;
-    highp float Exponent = 2.0 * mod(rgba[0],128.0) + step(128.0,rgba[1]) - 127.0;
-    highp float Mantissa = mod(rgba[1],128.0)*65536.0 + rgba[2]*256.0 +rgba[3] + float(0x800000);
-    highp float Result =  Sign * exp2(Exponent) * (Mantissa * exp2(-23.0 ));
-    return Result;
-}
 
 float unpack2(const vec2 pack) {
     return dot(pack, vec2(1.0, 1.0 / 255.0));
@@ -198,27 +183,26 @@ void main(void) {
     vec4 normalTex = vec4(texture2D(normalSampler, gl_FragCoord.xy / resolution));
     vec3 normal = decode(vec4(unpack2(normalTex.xy), unpack2(normalTex.zw), 0, 0));
     gl_FragColor = vec4(normal, 1.0);
+	
 
-    highp float depth = decode32(texture2D(depthPrecSampler, gl_FragCoord.xy / resolution)) ;
-    //depth = depth * 0.5 + 0.5;
-    //depth = 2.0 * depth - 1.0;
-    //depth = (depth - 1.0) / 1000.;
-    float depth1 = depth;
-    gl_FragColor = vec4(vec3(depth), 1.0);
-
-    depth = texture2D(depthSampler, gl_FragCoord.xy / resolution).x;
+    // Sample from depth buffer
+    float depth = texture2D(depthSampler, gl_FragCoord.xy / resolution).x;
+    // Transform to ndc coords
     depth = 2.0 * depth - 1.0;
 
+    // Invert projection
     //depth = (depth * uPmat[3][3] - uPmat[3][2]) / (uPmat[2][2] - depth * uPmat[2][3]);
-    depth = - uPmat[3][2] / (uPmat[2][2] + depth);
+    depth = -uPmat[3][2] / (uPmat[2][2] + depth);
 
+    // Reconstruct eye position
     vec3 eyePos = vec3(vRay, 1.0) * depth / 50.;
 
     gl_FragColor = vec4(eyePos, 1.0);
+	//gl_FragColor = vec4(1., 1., 1., 1.);
 
     depth = 1. - (-depth - 1.0) / 1000.;
     //gl_FragColor = vec4(vec3(depth), 1.0);
-    //gl_FragColor = vec4(vec3(pow(depth1-depth, 200.)), 1.0);
 
-    //gl_FragColor = vec4(normal, 1.0);
+    vec4 texture = vec4(texture2D(textureSampler, gl_FragCoord.xy / resolution));
+	gl_FragColor = texture;
 }

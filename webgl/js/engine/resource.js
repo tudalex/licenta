@@ -1,14 +1,30 @@
 /**
  * Created by tudalex on 15.03.2014.
  */
-"use strict";
-
 function ResourceManager() {
     "use strict";
 }
 
 ResourceManager.prototype.load = function(path) {
+    "use strict";
     return this.sceneData.file(path).asText();
+};
+
+ResourceManager.prototype.loadBinary = function(path) {
+    "use strict";
+    return this.sceneData.file(path).asUint8Array();
+};
+
+ResourceManager.prototype.loadImage = function(path) {
+    "use strict";
+    var data = this.loadBinary(path);
+    var blob = new Blob( [ data ], { type: "image/jpeg" } );
+    var urlCreator = window.URL || window.webkitURL;
+    var imageUrl = urlCreator.createObjectURL( blob );
+    var img = new Image();
+    img.src = imageUrl;
+    document.body.appendChild(img);
+    return img;
 };
 
 ResourceManager.prototype.loadZip = function(url) {

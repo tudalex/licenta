@@ -112,8 +112,9 @@ function Renderer(canvas_id, stats, timer, engine) {
     this.initGL(this.canvas);
 
     this.timer = timer;
-    if (stats)
+    if (stats) {
         this.stats = stats;
+    }
 
     this.manager = new ResourceManager();
     engine.renderer = this;
@@ -147,6 +148,7 @@ Renderer.prototype.initMat = function() {
 }
 
 Renderer.prototype.initGL = function(canvas) {
+    "use strict";
     this.rawgl = canvas.getContext("experimental-webgl")
         || canvas.getContext("webgl");
 
@@ -160,13 +162,17 @@ Renderer.prototype.initGL = function(canvas) {
     }
 
     this.gl = this.rawgl;
-    //this.gl = WebGLDebugUtils.makeDebugContext(this.rawgl, undefined, logGLCall);
-    //this.gl = WebGLDebugUtils.makeDebugContext(this.rawgl);
+//    this.gl = WebGLDebugUtils.makeDebugContext(this.rawgl, undefined, logGLCall);
+//    this.gl = WebGLDebugUtils.makeDebugContext(this.rawgl);
 
     //console.dir(this.gl.getSupportedExtensions());
     this.extDepth = this.gl.getExtension("WEBGL_depth_texture");
     this.extDraw = this.gl.getExtension("WEBGL_draw_buffers");
     this.extFloat = this.gl.getExtension("OES_texture_float");
+    this.extFloatLinear = this.gl.getExtension("OES_texture_float_linear");
+
+    window.gl = this.gl;
+    return this.gl;
 };
 
 
@@ -174,8 +180,7 @@ Renderer.prototype.createShader = function(name, type) {
     "use strict";
     var gl = this.gl;
 
-    var url = 'shaders/' + name + '.'
-        + (type == gl.VERTEX_SHADER ? 'vs' : 'fs');
+    var url = 'shaders/' + name + '.' + (type === gl.VERTEX_SHADER ? 'vs' : 'fs');
 
     return ajax(url, 'text')
         .then(function(e) {
@@ -229,9 +234,11 @@ Renderer.prototype.loadGeometryPassProg = function() {
 
             program.vertexPositionAttrib = gl.getAttribLocation(program, "aVertexPosition");
             program.normalAttrib = gl.getAttribLocation(program, "aNormal");
+            program.texAttrib = gl.getAttribLocation(program, "aTextureCoord");
 
             gl.enableVertexAttribArray(program.vertexPositionAttrib);
             gl.enableVertexAttribArray(program.normalAttrib);
+            gl.enableVertexAttribArray(program.texAttrib);
 
             program.pMatUniform = gl.getUniformLocation(program, "uPmat");
             program.mMatUniform = gl.getUniformLocation(program, "uMmat");
@@ -301,14 +308,14 @@ Renderer.prototype.loadShaderPrograms = function() {
     ];
 
     return Promise.all(programs);
-}
+};
 
 Renderer.prototype.initFB = function() {
     "use strict";
 
     var gl = this.gl;
     this.fbo = gl.createFramebuffer();
-    this.intermediate = this.createFBTexture(gl.RGBA, gl.UNSIGNED_BYTE);
+    this.intermediate = this.createFBTexture(gl.RGBA, gl.FLOAT);
     this.depthText = this.createFBTexture(gl.DEPTH_COMPONENT, gl.UNSIGNED_INT);
     this.depthPrec = this.createFBTexture(gl.RGBA, gl.FLOAT);
     this.normal = this.createFBTexture(gl.RGBA, gl.FLOAT);
@@ -333,6 +340,31 @@ Renderer.prototype.setMatrixUniform = function() {
 
 
 
+Renderer.prototype.checkFramebufferStatus = function() {
+    "use strict";
+    var gl = this.gl;
+    var status = gl.checkFramebufferStatus(gl.FRAMEBUFFER);
+    switch (status) {
+        case gl.FRAMEBUFFER_COMPLETE:
+            break;
+        case gl.FRAMEBUFFER_INCOMPLETE_ATTACHMENT:
+            console.log("Incomplete framebuffer: FRAMEBUFFER_INCOMPLETE_ATTACHMENT");
+            break;
+        case gl.FRAMEBUFFER_INCOMPLETE_MISSING_ATTACHMENT:
+            console.log("Incomplete framebuffer: FRAMEBUFFER_INCOMPLETE_MISSING_ATTACHMENT");
+            break;
+        case gl.FRAMEBUFFER_INCOMPLETE_DIMENSIONS:
+            console.log("Incomplete framebuffer: FRAMEBUFFER_INCOMPLETE_DIMENSIONS");
+            break;
+        case gl.FRAMEBUFFER_UNSUPPORTED:
+            throw("Incomplete framebuffer: FRAMEBUFFER_UNSUPPORTED");
+            break;
+        default:
+            throw("Incomplete framebuffer: " + status);
+    }
+};
+
+
 Renderer.prototype.createFBTexture = function(type, size, type2) {
     "use strict";
     var gl = this.gl;
@@ -344,8 +376,8 @@ Renderer.prototype.createFBTexture = function(type, size, type2) {
     gl.bindTexture(gl.TEXTURE_2D, texture);
     gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
     gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
-    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
-    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, type === gl.FLOAT ? gl.LINEAR : gl.NEAREST);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, type === gl.FLOAT ? gl.LINEAR : gl.NEAREST);
     gl.texImage2D(gl.TEXTURE_2D, 0, type, gl.canvas.width, gl.canvas.height, 0, type2, size, null);
     return texture;
 };
@@ -400,12 +432,15 @@ Renderer.prototype.drawFullScreenQuad = function() {
     "use strict";
     var gl = this.gl;
 
-    gl.bindBuffer(gl.ARRAY_BUFFER, this.quadRayBuffer);
-    gl.vertexAttribPointer(this.shaderProgram.rayAttrib, 2, gl.FLOAT, false, 0, 0);
+    if (this.shaderProgram.rayAttrib !== -1) {
+        gl.bindBuffer(gl.ARRAY_BUFFER, this.quadRayBuffer);
+        gl.vertexAttribPointer(this.shaderProgram.rayAttrib, 2, gl.FLOAT, false, 0, 0);
+    }
 
-    gl.bindBuffer(gl.ARRAY_BUFFER, this.quadVertexBuffer);
-    gl.vertexAttribPointer(this.shaderProgram.vertexPositionAttrib, 3, gl.FLOAT, false, 0, 0);
-
+    if (this.shaderProgram.vertexPositionAttrib !== -1) {
+        gl.bindBuffer(gl.ARRAY_BUFFER, this.quadVertexBuffer);
+        gl.vertexAttribPointer(this.shaderProgram.vertexPositionAttrib, 3, gl.FLOAT, false, 0, 0);
+    }
     gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
 
 };
@@ -454,19 +489,27 @@ Renderer.prototype.drawLightVolume = function(mesh) {
 Renderer.prototype.drawScene = function() {
     "use strict";
     var gl = this.gl;
-
+    //console.log("Frame start");
     gl.enable(gl.DEPTH_TEST);
     this.shaderProgram = this.geometryPassProg;
     gl.useProgram(this.shaderProgram);
 
     gl.bindFramebuffer(gl.FRAMEBUFFER, this.fbo);
+
     this.extDraw.drawBuffersWEBGL(this.bufs);
 
-    gl.framebufferTexture2D(gl.FRAMEBUFFER, this.bufs[0], gl.TEXTURE_2D, this.intermediate, 0);
-    gl.framebufferTexture2D(gl.FRAMEBUFFER, this.bufs[1], gl.TEXTURE_2D, this.depthPrec, 0);
-    gl.framebufferTexture2D(gl.FRAMEBUFFER, this.bufs[2], gl.TEXTURE_2D, this.normal, 0);
+    //this.checkFramebufferStatus();
     gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.DEPTH_ATTACHMENT, gl.TEXTURE_2D, this.depthText, 0);
-    gl.viewport(0, 0, gl.canvas.width, gl.canvas.height);
+    //this.checkFramebufferStatus();
+    gl.framebufferTexture2D(gl.FRAMEBUFFER, this.bufs[0] , gl.TEXTURE_2D, this.intermediate, 0);
+    //this.checkFramebufferStatus();
+    gl.framebufferTexture2D(gl.FRAMEBUFFER, this.bufs[1] , gl.TEXTURE_2D, this.depthPrec, 0);
+    //this.checkFramebufferStatus();
+    gl.framebufferTexture2D(gl.FRAMEBUFFER, this.bufs[2] , gl.TEXTURE_2D, this.normal, 0);
+
+
+    //gl.viewport(0, 0, gl.canvas.width, gl.canvas.height);
+
     gl.clear(this.gl.COLOR_BUFFER_BIT | this.gl.DEPTH_BUFFER_BIT);
 
     this.currCamera.animate();
@@ -479,10 +522,10 @@ Renderer.prototype.drawScene = function() {
 
     this.shaderProgram = this.lightPassProg;
     gl.bindFramebuffer(gl.FRAMEBUFFER, null);
-    //this.extDraw.drawBuffersWEBGL(null);
+
     gl.disable(gl.DEPTH_TEST);
-    //gl.disable(gl.STENCIL_TEST);
-    //gl.clear(this.gl.COLOR_BUFFER_BIT | this.gl.DEPTH_BUFFER_BIT);
+    gl.disable(gl.STENCIL_TEST);
+    gl.clear(this.gl.COLOR_BUFFER_BIT | this.gl.DEPTH_BUFFER_BIT);
 
     gl.useProgram(this.shaderProgram);
     gl.activeTexture(gl.TEXTURE0);

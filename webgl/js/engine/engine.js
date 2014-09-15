@@ -3,24 +3,30 @@
  */
 
 /** @export */
-function Engine(canvas_id) {
+function Engine(canvas_id, frameCount) {
     "use strict";
+    this.frameCount = frameCount || -1;
     this.timer = new Timer(16, false);
     this.timer.map(0, "DrawMesh");
     this.timer.map(1, "Draw");
 
     this.stats = this.initStats();
+
     this.inputControl = new InputControlSystem();
+
     this.input = new InputControl(canvas_id);
-    this.inputControl.useInputControl(this.input);
     this.input.defineAction('forward', 'W');
     this.input.defineAction('backward', 'S');
     this.input.defineAction('left', 'A');
     this.input.defineAction('right', 'D');
     this.input.defineAction('up', 'R');
     this.input.defineAction('down', 'F');
+
+    this.inputControl.useInputControl(this.input);
+
     this.renderer = new Renderer(canvas_id, this.stats, this.timer, this);
 
+    this.physics = new Physics(this.render);
 
     //TODO(tudalex): Fix it and make the renderer use the resource manager from the engine
     this.manager = this.renderer.manager;
@@ -65,8 +71,16 @@ Engine.prototype.mainLoop = function() {
 
     this.renderer.drawScene();
 
+    this.physics.step();
+
     if (this.stats) {
         this.stats.end();
+    }
+
+    if (this.frameCount > 0) {
+        --this.frameCount;
+        if (this.frameCount == 0)
+            return;
     }
 
     window.requestAnimationFrame(this.mainLoop, this.renderer.canvas);
