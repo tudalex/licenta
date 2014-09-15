@@ -23,8 +23,9 @@ Scene.prototype.draw = function(shaderProgram, mMat) { // mMat is unused since t
     });
 };
 
-function SceneObject(mesh) {
+function SceneObject(mesh, manager) {
     "use strict";
+    this.manager = manager;
     this.mesh = mesh;
     this.rotation = quat.create();
     this.position = vec3.create();
@@ -59,6 +60,7 @@ SceneObject.prototype.setRotation = function(newRotation) {
 };
 
 SceneObject.prototype.initPhysics = function (physics, shape) {
+    "use strict";
     this.physics = physics;
     var p = this.position;
     this.physicsBody = physics.createBody(1, new Ammo.btVector3(p[0], p[1], p[2]), shape);
@@ -86,15 +88,8 @@ SceneObject.prototype.initGl = function(gl) {
 
     if (mesh.texture) {
         mesh.texture.then(function(e) {
-            var img = e.srcElement;
-            var texture = gl.createTexture();
-            gl.bindTexture(gl.TEXTURE_2D, texture);
-            gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, img);
-            gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
-            gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR_MIPMAP_NEAREST);
-            gl.generateMipmap(gl.TEXTURE_2D);
-            gl.bindTexture(gl.TEXTURE_2D, null);
-            this.texture = texture;
+            var img = e.target;
+            this.texture = this.manager.getTexture(img, gl);
         }.bind(this));
     }
 };
@@ -131,7 +126,7 @@ SceneObject.prototype.draw = function(shaderProgram) {
 };
 
 var ObjectFactory = {}; //jshint ignore:line
-ObjectFactory.getBox = function(img) {
+ObjectFactory.getBox = function(img, manager) {
     "use strict";
     var mesh = {};
     mesh.vertices = [
@@ -217,7 +212,7 @@ ObjectFactory.getBox = function(img) {
         mesh.texture = img;
     }
     ObjectFactory.computeNormals(mesh);
-    return new SceneObject(mesh);
+    return new SceneObject(mesh, manager);
 };
 
 ObjectFactory.computeNormals = function(mesh) {

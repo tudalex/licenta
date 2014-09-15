@@ -2,48 +2,103 @@
  * Created by tudalex on 17.03.2014.
  */
 
-"use strict";
-
 function InputControlSystem(elementId) {
-    this.elemntId = elementId;
+    "use strict";
+    var canvas = this.canvas = document.getElementById(elementId);
+    canvas.requestPointerLock = canvas.requestPointerLock ||
+        canvas.mozRequestPointerLock ||
+        canvas.webkitRequestPointerLock;
+
     this.currentInputControl = {};
     this.initKeyboard();
-    this.initMouseLock();
+    //this.initMouseLock();
+    canvas.addEventListener('mousedown', function(e) {
+        if (!this.pointerLocked() && e.which === 3) {
+            canvas.requestPointerLock();
+        }
+    }.bind(this));
+    canvas.addEventListener('mousedown', this.mouseClickCallback.bind(this));
+    canvas.addEventListener('mousemove', this.mouseMoveCallback.bind(this));
+    this.mouseBound = false;
 }
 
+InputControlSystem.prototype.mouseClickCallback = function(e) {
+    "use strict";
+    if (this.pointerLocked()) {
+        this.currentInputControl.mouseClickCallback(e);
+    }
+};
+
+InputControlSystem.prototype.mouseMoveCallback = function(e) {
+    "use strict";
+    if (this.pointerLocked()) {
+        var x = e.movementX || e.mozMovementX || e.webkitMovementX;
+        var y = e.movementY || e.mozMovementY || e.webkitMovementY;
+        this.currentInputControl.mouseMoveCallback(x, y);
+    }
+};
+
+InputControlSystem.prototype.pointerLocked = function() {
+    "use strict";
+    var canvas = this.canvas;
+    return document.pointerLockElement === canvas ||
+        document.mozPointerLockElement === canvas ||
+        document.webkitPointerLockElement === canvas;
+};
+
 InputControlSystem.prototype.keyCallback = function(ev) {
+    "use strict";
     this.currentInputControl.keyCallback.call(this.currentInputControl, ev);
 };
 
 InputControlSystem.prototype.initKeyboard = function() {
+    "use strict";
     document.addEventListener('keydown', this.keyCallback.bind(this));
     document.addEventListener('keyup', this.keyCallback.bind(this));
 
 };
 
 InputControlSystem.prototype.releaseKeybaord = function() {
+    "use strict";
     document.removeEventListener('keydown', this.keyCallback.bind(this));
     document.removeEventListener('keyup', this.keyCallback.bind(this));
 };
 
 InputControlSystem.prototype.useInputControl = function(inputControl) {
+    "use strict";
     this.currentInputControl = inputControl;
 };
 
-InputControlSystem.prototype.mouseMoveCallback = function(m) {
 
-};
 
 InputControlSystem.prototype.initMouseLock = function() {
-    var elem = document.getElementById(this.element_id);
+    "use strict";
+    this.requestPointerLock();
 };
 
 function InputControl(elementId) {
+    "use strict";
     this.elementId = elementId;
     this.keystatus = new Uint8Array(256);
     this.debug = false;
     this.actions = {};
+    this.dx = 0;
+    this.dy = 0;
 }
+
+
+InputControl.prototype.mouseMoveCallback = function(dx, dy) {
+    "use strict";
+    this.dx += dx;
+    this.dy += dy;
+};
+
+InputControl.prototype.getMouseMove = function() {
+    "use strict";
+    var ret = [this.dx, this.dy];
+    this.dx = this.dy = 0;
+    return ret;
+};
 
 InputControl.prototype.defineAction = function(name) {
     "use strict";
@@ -86,7 +141,6 @@ InputControl.prototype.keyCallback = function(ev) {
         case "keydown":
             this.keystatus[ev.keyCode] = 1;
     }
-
 };
 
 

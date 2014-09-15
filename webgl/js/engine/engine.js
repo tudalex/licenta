@@ -11,9 +11,7 @@ function Engine(canvas_id, frameCount) {
     this.timer.map(1, "Draw");
 
     this.stats = this.initStats();
-
-    this.inputControl = new InputControlSystem();
-
+    this.inputControl = new InputControlSystem(canvas_id);
     this.input = new InputControl(canvas_id);
     this.input.defineAction('forward', 'W');
     this.input.defineAction('backward', 'S');

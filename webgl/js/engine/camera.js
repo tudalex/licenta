@@ -19,8 +19,8 @@ function Camera(engine) {
 Camera.prototype.animate = function(time) { //FIXME: Probably wrong name for the function
     "use strict";
     var temp;
-
-    if (this.input.action('forward')) {
+    var input = this.input;
+    if (input.action('forward')) {
         temp = vec3.create();
         vec3.subtract(temp, this.eye, this.center); // move twords center
 
@@ -30,7 +30,7 @@ Camera.prototype.animate = function(time) { //FIXME: Probably wrong name for the
             vec3.subtract(this.eye, this.eye, temp);
         }
     }
-    if (this.input.action('backward')) {
+    if (input.action('backward')) {
         temp = vec3.create();
         vec3.subtract(temp, this.eye, this.center); // move twords center
         vec3.normalize(temp, temp);
@@ -38,20 +38,26 @@ Camera.prototype.animate = function(time) { //FIXME: Probably wrong name for the
         vec3.add(this.eye, this.eye, temp);
     }
 
-    if (this.input.action('left')) {
+    if (input.action('left')) {
         quat.rotateY(this.quat, this.quat, 0.03);
     }
-    if (this.input.action('right')) {
+    if (input.action('right')) {
         quat.rotateY(this.quat, this.quat, -0.03);
     }
 
-    if (this.input.action('up')) {
+    if (input.action('up')) {
         quat.rotateX(this.quat, this.quat, 0.03);
     }
 
-    if (this.input.action('down')) {
+    if (input.action('down')) {
         quat.rotateX(this.quat, this.quat, -0.03);
     }
+
+    // Mouse movement
+    var d = input.getMouseMove();
+    var scale = 1. / 100;
+    quat.rotateY(this.quat, this.quat, d[0] * scale);
+    quat.rotateX(this.quat, this.quat, d[1] * scale);
 
     var processed_eye = vec3.create();
     var processed_up = vec3.create();
