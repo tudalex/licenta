@@ -68,6 +68,26 @@ Camera.prototype.animate = function(time) { //FIXME: Probably wrong name for the
 
 function FreeRoamCamera(engine) {
     Camera.call(this, engine);
+    this.forward = vec3.fromValues(0, 0, 1);
+    this.pos = vec3.fromValues(0, 0, -120);
 }
 FreeRoamCamera.prototype = Object.create(FreeRoamCamera.prototype);
-FreeRoamCamera.prototype
+FreeRoamCamera.prototype.animate = function(time) {
+    "use strict";
+    var input = this.input;
+    if (input.action('forward')) {
+        vec3.add(this.pos, this.pos, vec3.transformQuat(vec3.create(), this.forward, this.quat));
+    }
+
+    if (input.action('backward')) {
+        vec3.subtract(this.pos, this.pos, vec3.transformQuat(vec3.create(), this.forward, this.quat));
+    }
+
+    // Mouse movement
+    var d = input.getMouseMove();
+    var scale = 1.0 / 100;
+    quat.rotateY(this.quat, this.quat, d[0] * scale);
+    quat.rotateX(this.quat, this.quat, d[1] * scale);
+
+    mat4.fromRotationTranslation(this.renderer.vMat, this.quat, this.pos);
+};
