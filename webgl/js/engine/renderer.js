@@ -170,8 +170,7 @@ Renderer.prototype.initGL = function(canvas) {
     this.extDraw = this.gl.getExtension("WEBGL_draw_buffers");
     this.extFloat = this.gl.getExtension("OES_texture_float");
     this.extFloatLinear = this.gl.getExtension("OES_texture_float_linear");
-    this.gl.enable(this.gl.CULL_FACE);
-    this.gl.cullFace(this.gl.BACK);
+
     window.gl = this.gl;
     return this.gl;
 };
@@ -472,7 +471,7 @@ Renderer.prototype.initLightVolumes = function() {
             vertexBuffer: vertBuff,
             indexBuffer: indBuff,
             indexLength: mesh.indices.length
-        };
+        }
     }
 };
 

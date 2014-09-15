@@ -15,7 +15,7 @@ AsmJS mode is a special mode created by Mozilla and implemented in Firefox. The 
 
 \subsection{Memory model}
 
-JavaScript is a garbage collected language. All the variables in JavaScript are prototypes which means that they are objects, but for performance reasons various JavaScript engine’s implement Just In Time compilers (JITs) that can compile a certain subset of JavaScript into native code. Some of the JITs have special optimizations for certain variable uses. For example, Chrome’s V8 has optimization for arrays (variables which have the prototype as the Array object), that translates them to normal arrays, but only as long as no other property is attached to it. If this happens, then it falls back to lesser optimized implementations. Arrays by their nature, in JavaScript are just a special case of an object which inherits the Array object. Thus, inherits its methods and properties, but each index can also be accessed by referencing to it in a property way (i. e. array.1 instead of array[1]). This coupled together with the fact that you can also access properties through the [] operator (i.e. array[‘length’] instead of array.length), can lead to the creation of sparse arrays. Sparse arrays aren’t optimized in the JIT as demonstrated in V8 (from reference \cite{clifford12}).
+JavaScript is a garbage collected language. All the variables in JavaScript are prototypes which means that they are objects, but for performance reasons various JavaScript engine’s implement Just In Time compilers (JITs) that can compile a certain subset of JavaScript into native code. Some of the JITs have special optimizations for certain variable uses. For example, Chrome’s V8 has optimization for arrays (variables which have the prototype as the Array object), that translates them to normal arrays, but only as long as no other property is attached to it. If this happens, then it falls back to lesser optimized implementations. Arrays by their nature, in JavaScript are just a special case of an object which inherits the Array object. Thus, inherits its methods and properties, but each index can also be accessed by referencing to it in a property way (i. e. array.1 instead of array[1]). This coupled together with the fact that you can also access properties through the [] operator (i.e. array[‘length’] instead of array.length), can lead to the creation of sparse arrays. Sparse arrays aren’t optimized in the JIT as demonstrated in V8.(from reference \cite{clifford12})
 
 Another problem that JavaScript poses is the fact that all of its arithmetic and numbers are stored on double precision floating point numbers. This makes some of the calculations more slower than expected. It can also introduce type incompatibilities, so in order to interface with WebGL, we need to use TypedArrays. A TypedArray has a backing ArrayBuffer which is a contiguous memory zone. It offers an array like API with a backing store of 8 bit unsigned integers. A TypedArray is just a higher level view of an underlying part of an ArrayBuffer, taking care of implementing arrays of different types over the ArrayBuffer. The types implemented are: Int8Array, Uint8Array, Int16Array, Uint16Array, Int32Array, Uint32Array, Float32Array, Float64Array. Due to the fact that  JavaScript is still a garbage collected language, this means that although we can allocate these buffers, we can’t also discard of them when they are of no more use.
 
@@ -26,7 +26,7 @@ A implementation of a similar allocator in JavaScript can be found in the listin
 \lstset{caption=Allocation benchmark (allocator.js), label=lst:allocation-benchmark}
 \lstinputlisting{src/listings/allocator.js}
 
-The most called out size for a TypedArray allocation is 16 as this is the size of a 4x4 matrix used for transformations. Another allocation size is around 10000 which can be the average size of a vertex buffer or an index buffer. To top it up, a larger allocation size can be around tens of MB of RAM, which can represent textures. I am going to use these three dimensions in a allocation benchmark\footnote{http://jsperf.com/allocator-test/2, accessed on 10.09.2014} in order to test how much gain the engine can get from using a custom allocator.
+The most called out size for a TypedArray allocation is 16 as this is the size of a 4x4 matrix used for transformations. Another allocation size is around 10000 which can be the average size of a vertex buffer or an index buffer. To top it up, a larger allocation size can be around tens of MB of ram, which can represent textures. I am going to use these three dimensions in a allocation benchmark\footnote{http://jsperf.com/allocator-test/2, accessed on 10.09.2014} in order to test how much gain the engine can get from using a custom allocator, as can be seen in figure ~\ref{img:chart1}
 
 \begin{center}
 	\begin{figure}[here!]
@@ -37,14 +37,14 @@ The most called out size for a TypedArray allocation is 16 as this is the size o
 	\end{figure}
 \end{center}
 
-As can be seen from the benchmark results (~\ref{img:chart1}), there is no increase in performance by implementing a custom allocator for JavaScript. The only size for which an increase in performance is seen is for a allocation size of 1000. This is quite peculiar, as it would have been expected to see an increase in performance for the case in which a small array is allocated, like for size 16.
+As can be seen from the benchmark results, there is no increase in performance by implementing a custom allocator for JavaScript. The only size for which an increase in performance is seen is for a allocation size of 1000. This is quite peculiar, as it would have been expected to see an increase in performance for the case in which a small array is allocated, like for size 16.
 
 \subsection{Speed}
 
-In order to compare if AsmJS offers any speed improvements for raw processing power, I've looked at a couple of benchmarks.
+In order to compare if AsmJS offers any speed improvements for raw processing power I've looked at a couple of benchmarks.
 
-The first benchmark\footnote{http://jsperf.com/slow-asm-js/4, accessed on 10.09.2014} compares two identical murmur3 hash implementations: one using AsmJS and one not using AsmJS. 
-As it can be seen in figure ~\ref{img:murmur3}, AsmJS doesn't bring any optimizations to the bitwise operations done by Murmur3 Hash.
+The first benchmark\footnote{http://jsperf.com/slow-asm-js/4, accessed on 10.09.2014} compares two identical murmur3 hash implementations, one using AsmJS and one not using AsmJS. 
+As it can be seen in figure ~\ref{img:murmur3} AsmJS doesn't bring any optimizations to the bitwise operations done by Murmur3 Hash.
 \begin{center}
 	\begin{figure}[here!]
 		\includegraphics[width=\textwidth]{src/img/murmur3.png}
@@ -92,20 +92,20 @@ The resource manager is responsible for loading the data and the scene from the 
 The rendering engine is a replaceable part of the game engine. It was written specifically so that it can easily be replaced with another rendering engine if necessary.
 The implemented rendering engine uses the deferred rendering technique. It has a G-Buffer inspired from the Killzone 2’s G-Buffer without the render targets for motion blur.
 It uses the WEBGL\_draw\_buffers extension in order to bind multiple render targets to a frame buffer. The WEBGL\_draw\_buffers extension has the same limitation as on last generation consoles, just four render targets plus the twenty four bit depth buffer with eight bit stencil buffer texture and only 8 bit per color textures.
-In order to get the world position of each fragment, the depth texture is sampled and converted into view space coordinates.
+In order to get the world position of each fragment the depth texture is sampled and converted into view space coordinates.
 
 Depth can be saved in two ways: either using the UNSIGNED\_INT\_24\_8\_WEBGL depth texture or by saving the depth in a 32 bit using a RGBA8 texture.
-In order to save the depth into the RGBA8 texture, it needs to be packed. For that, I am using the functions (specified in \cite{engel14}) which you can see in listing \ref{lst:packing}.
+In order to save the depth into the RGBA8 texture it needs to be packed. For that I am using the functions specified in \cite{engel14} which you can see in listing \ref{lst:packing}.
 
 \lstset{caption=RGBA8 packing, label=lst:packing}
 \lstinputlisting{src/listings/pack.fs}
 
-The depth buffer, after multiplying it with the reverse projection matrix, looks like in figure ~\ref{img:depth}.
+The depth buffer after multiplying it with the reverse projection matrix looks like in figure ~\ref{img:depth}.
 From that depth buffer, I multiply it with the view matrix to obtain the view space position, a rendering of the scene with the view space coordinates encoded into the RGB values can be found at figure ~\ref{img:view-space}.
 
 \section{Input Control}
 
-The input control system handles all the bindings to the DOM events. Then, it forwards the events to the current InputControl object. 
+The input control system handles all the bindings to the DOM events. It then forwards the events to the current InputControl object. 
 Each InputControl object holds an ArrayBuffer which contains the state of the keys. The input control is based on actions, each action is defined by a set of keys which can trigger it. The set of keys is defined as a string representing them. Each of these keys pressed is enough to consider the action to be true. One of this sets is named an action. In order to check if an action is true, the API offers an action method which needs to be called using the name of the action. There can be multiple input controls defined, but only one active at a certain time. Activating an input control is done by using the useInputControl method. 
 
 HTML5 had an API which allows mouse locking to occur, named PointerLock API. Each time we request a pointer lock, this triggers a visual confirmation prompt to the user who must allow or deny the pointer lock. This is different from the usual desktop implementation which doesn't require confirmation from the user in order to lock the mouse pointer.
@@ -124,7 +124,7 @@ The camera system handles multiple camera types:
 & Random camera
 \end{easylist}
 
-A scene based camera is part of the scene graph and has a parent and possibly children attached to it. Its position is calculated based on the position of the parent. It has the same properties as any other object in the scene graph, it too can have for example a physics object attached to it, it can also have scripting attached to it. It is extremely useful for creating 3rd person cameras that need to have collision shapes.
+A scene based camera is part of the scene graph and has a parent and possibly children attached to it. It's position is calculated based on the position of the parent. It has the same properties as any other object in the scene graph, it too can have for example a physics object attached to it, it can also have scripting attached to it. It is extremely useful for creating 3rd person cameras that need to have collision shapes.
 
 Random cameras are cameras that extend the $Camera$ class and implement their own behavior. For example, the implemented orbiting camera is such a camera because it orbits around the center of the scene and is not part of the scene. 
 
@@ -133,9 +133,9 @@ Random cameras are cameras that extend the $Camera$ class and implement their ow
 The physics engine is just a wrapper over Ammo.JS. The wrapper is necessary in order to execute the physics engine on another thread using web workers.
 Each node on the scene graph has a physics properties object which is linked to the physics object simulations. The scene graph is sent to the physics worker between each frame. The physics worker parses the scene graph and updates the physics properties of the objects according to the physics simulation.
 
-AmmoJS uses Bullet physics engine to do the physics simulation, itself is just a wrapper over Bullet's methods, for example in order to call $btDefaultCollisionConfiguration$ we call it using AmmoJS via its wrapper class Ammo, $Ammo.btDefaultCollisionConfiguration$.
+AmmoJS uses Bullet physics engine to do the physics simulation, itself is just a wrapper over Bullet's methods, for example in order to call $btDefaultCollisionConfiguration$ we call it using AmmoJS via it's wrapper class Ammo, $Ammo.btDefaultCollisionConfiguration$.
 
-Due to the fact that this is Emscripten compiled code, one must be careful to deallocate objects that it creates, since all the objects created are allocated on the same ArrayBuffer that is used as a heap zone so JavaScript's garbage collector can't collect them. In order to deallocate an object we must call it's $destroy$ method.
+Due to the fact that this is Emscripten compiled code, one must be careful to deallocate objects that it creates, since all the objects created are allocated on the same ArrayBuffer that is used as a heap zone so JavaScript's garbage collector can't collect them. In order to de allocate an object we must call it's $destroy$ method.
 \section{Scripting}
 
 The scripting system is based upon the fact that JavaScript is an interpreted language. All the scripts are wrapped in a JavaScript scope, where a couple of objects are made available. The scope is created by inserting the JavaScript code into a function body. This can be done because in JavaScript functions are first-class citizens, this means that functions can be manipulated however the programmer wants. Of course this does not allow the JIT to compile something that might modify itself, so under strict mode only the creation of new functions is possible. This can be done using the Function prototype.
@@ -159,16 +159,16 @@ Since scripts are run on the rendering thread it is possible for them to call ou
 \section{Timer}
 
 The timer module is a utility module that gives the programmer all the timing option he needs. In order to offer high precision timing, the timer module uses the high precision time function: window.performance.now(). This function is useful for implementing high resolution timers.
-The most basic timers are profiling timers. These are used to track and aggregate stats regarding a certain operation that the programmer wants profiled. It keeps track of subsequent invocations of the same timer id and generates the minimum time interval, the maximum time interval and the average time interval for each timing. It can print a report of all the timers. You can use the profiling feature by calling the start and stop methods of the Timer class. These methods take a single parameter: the id of the profiled section. The id should be mapped to a name using the map method; this ensures that the timer is presented in the statistics.
+The most basic timers are profiling timers, these are used to track and aggregate stats regarding a certain operation that the programmer wants profiled. It keeps track of subsequent invocations of the same timer id and generates the minimum time interval, the maximum time interval and the average time interval for each timing. It can print a report of all the timers. You can use the profiling feature by calling the start and stop methods of the Timer class. These methods take a single parameter: the id of the profiled section. The id should be mapped to a name using the map method; this ensures that the timer is presented in the statistics.
 
-Another type of timers are real time timers. These timers track the time passing in real time. They are useful for interpolating animations and various other effects. These timers are instanced based. They are obtained by instantiating a RealTimeTimer object.
+Another type of timers are real time timers, these timers track the time passing in real time. They are useful for interpolating animations and various other effects. These timers are instanced based. They are obtained by instantiating a RealTimeTimer object.
 
 The last type of timers are discrete timers. Discrete timers are obtained by calling the getTimer method of a DiscreteTimeClock. The discrete timer measures the time passed from the creation of the object to the current time of the discrete clock it’s associated with.
 
 \section{GUI}
 
-Because the WebGL context is rendered in a canvas element inside a HTML5 web page, any normal HTML element can be overlayed on top of the canvas area to create a GUI (Graphical User Interface).
-Using CSS3 3D transforms, HTML elements can be used in order to create a immersive HUD (Head-Up Display) for the game that is overlayed on top of the rendering canvas.
+Because the WebGL context is rendered in a canvas element inside a HTML5 web page, then any normal HTML element can be overlayed on top of the canvas area to create a GUI (Graphical User Interface).
+Using CSS3 3D transforms html elements can be used in order to create a immersive HUD for the game that is overlayed on top of the rendering canvas.
 This has multiple advantages:
 \begin{easylist}[itemize]
 & Support for a variety of fonts and fast text rendering.
@@ -202,4 +202,4 @@ According to Mozilla Developer Network \footnote{https://developer.mozilla.org/e
 & Opus
 \end{easylist}
 
-The number of simultaneous audio streams played is dependent on the implementation of the browser. For example, Safari on iOS can only play one audio file at a time\footnote{https://developer.apple.com/library/safari/documentation/audiovideo/conceptual/using_html5_audio_video/device-specificconsiderations/device-specificconsiderations.html}.
+The number of simultaneous audio streams played is dependent on the implementation of the browser. For example Safari on iOS can only play one audio file at a time\footnote{https://developer.apple.com/library/safari/documentation/audiovideo/conceptual/using_html5_audio_video/device-specificconsiderations/device-specificconsiderations.html}.
