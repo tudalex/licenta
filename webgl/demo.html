@@ -14,6 +14,7 @@
     <script type="application/javascript" src="js/vendor/gl-matrix.js"></script>
     <script type="application/javascript" src="js/vendor/ammo.js"></script>
     <script type="application/javascript" src="js/vendor/jszip.js"></script>
+    <script type="application/javascript" src="js/vendor/howler.js"></script>
     <script type="application/javascript" src="js/vendor/stats.min.js"></script>
 
     <script src="js/vendor/webgl-debug.js"></script>
@@ -32,6 +33,7 @@
     <script type="application/javascript" src="js/engine/rendererCore.js"></script>
     <script type="application/javascript" src="js/engine/rendererShaders.js"></script>
     <script type="application/javascript" src="js/engine/input.js"></script>
+    <script type="application/javascript" src="js/engine/audio.js"></script>
     <script type="application/javascript" src="js/engine/engine.js"></script>
 
 
@@ -47,6 +49,7 @@
             "use strict";
             engine = new Engine("test");
 
+            engine.audio.loadSound("brandon.wav", "a");
             var scene = new Scene(engine.renderer.gl);
             var img = loadImage("tex.jpg");
 
@@ -66,6 +69,7 @@
                 for (i = 0; i < boxes.length; ++ i) {
                     //boxes[i].initPhysics(engine.physics);
                 }
+                engine.audio.play("a");
             }, 2000);
 
             window.scene = scene;

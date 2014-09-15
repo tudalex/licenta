@@ -10,6 +10,7 @@ function Engine(canvas_id, frameCount) {
     this.timer.map(0, "DrawMesh");
     this.timer.map(1, "Draw");
 
+    this.audio = new AudioManager();
     this.stats = this.initStats();
     this.inputControl = new InputControlSystem(canvas_id);
     this.input = new InputControl(canvas_id);
