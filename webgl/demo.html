@@ -34,7 +34,7 @@
     <script type="application/javascript">
         agliEmbedDebug = true;
     </script>
-    <!--<script type="text/javascript" src="inspector/core/embed.js"></script>-->
+    <script type="text/javascript" src="inspector/core/embed.js"></script>
 
 
     <script type="application/javascript">
@@ -44,10 +44,10 @@
             engine = new Engine("test");
 
             var scene = new Scene(engine.renderer.gl);
-            var img = loadImage("tex.jpg")
-            var i, n = 10, boxes = [], box;
+            var img = loadImage("tex.jpg");
+            var i, n = 200, boxes = [], box;
             for (i = 0; i < n; ++i) {
-                box = ObjectFactory.getBox(img);
+                box = ObjectFactory.getBox(img, engine.manager);
                 box.setPosition(vec3.fromValues(Math.random() -0.5, i * 4, Math.random() -0.5));
                 scene.addObject(box);
                 boxes.push(box);

@@ -159,7 +159,7 @@ Renderer.prototype.initGL = function(canvas) {
 
     this.gl = this.rawgl;
 //    this.gl = WebGLDebugUtils.makeDebugContext(this.rawgl, undefined, logGLCall);
-    this.gl = WebGLDebugUtils.makeDebugContext(this.rawgl);
+//    this.gl = WebGLDebugUtils.makeDebugContext(this.rawgl);
 
     //console.dir(this.gl.getSupportedExtensions());
     this.extDepth = this.gl.getExtension("WEBGL_depth_texture");

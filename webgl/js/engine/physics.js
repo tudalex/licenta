@@ -22,8 +22,8 @@ Physics.prototype.init = function() {
     //his.createBody(0, new Ammo.btVector3(0, -100, 0), Ammo.btStaticPlaneShape(new Ammo.btVector3(0, 1, 0), 1));
     // Testing stuff
     this.setUpTest();
-
-
+    this.timer = new RealTimeTimer();
+    this.pstep = this.timer.getTotal();
 };
 
 Physics.prototype.setUpTest = function() {
@@ -63,7 +63,7 @@ Physics.prototype.readObjectPosition = function (object) {
     var rotation = transform.getRotation();
     var pos = vec3.fromValues(origin.x(), origin.y(), origin.z());
     var rot = quat.fromValues(rotation.x(), rotation.y(), rotation.z(), rotation.w());
-    var ret = mat4.fromRotationTranslation(mat4.create(), rot, pos);
+    //var ret = mat4.fromRotationTranslation(mat4.create(), rot, pos);
 
     Ammo.destroy(transform);
     return [pos, rot];
@@ -127,8 +127,11 @@ Physics.prototype.step = function() {
     "use strict";
     var newPhysicsScene = {};
     var i, bodies = this.bodies;
+    var cstep = this.timer.getTotal();
+    var delta = (this.pstep - cstep) / 1000;
+    this.pstep = cstep;
 
-    this.dynamicsWorld.stepSimulation(1.0 / 60.0, 10);
+    this.dynamicsWorld.stepSimulation(delta, 10);
 //        _.map(bodies, this.readObjectPosition);
 
 
