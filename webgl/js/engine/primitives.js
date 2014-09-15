@@ -113,23 +113,23 @@ SceneObject.prototype.initGl = function(gl) {
 };
 
 
-SceneObject.prototype.draw = function(shaderProgram) {
+SceneObject.prototype.draw = function(program) {
     "use strict";
     var gl = this.gl;
     var mesh = this.mesh;
     this.updateModelMat();
 
-    gl.uniformMatrix4fv(shaderProgram.mMatUniform, false, this.mMat);
+    gl.uniformMatrix4fv(program.mMatUniform, false, this.mMat);
 
     gl.bindBuffer(gl.ARRAY_BUFFER, mesh.vertexBuffer);
-    gl.vertexAttribPointer(shaderProgram.vertexPositionAttrib, 3, gl.FLOAT, false, 0, 0);
+    gl.vertexAttribPointer(program.vertexPositionAttrib, 3, gl.FLOAT, false, 0, 0);
 
     gl.bindBuffer(gl.ARRAY_BUFFER, mesh.normalBuffer);
-    gl.vertexAttribPointer(shaderProgram.normalAttrib, 3, gl.FLOAT, false, 0, 0);
+    gl.vertexAttribPointer(program.normalAttrib, 3, gl.FLOAT, false, 0, 0);
 
-    if (shaderProgram.texAttrib !== -1) {
+    if (program.texAttrib !== -1) {
         gl.bindBuffer(gl.ARRAY_BUFFER, mesh.textureCoordBuffer);
-        gl.vertexAttribPointer(shaderProgram.texAttrib, 2, gl.FLOAT, false, 0, 0);
+        gl.vertexAttribPointer(program.texAttrib, 2, gl.FLOAT, false, 0, 0);
     }
 
     if (mesh.texture && this.texture !== -1) {
