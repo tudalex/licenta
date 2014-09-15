@@ -135,7 +135,7 @@ SceneObject.prototype.draw = function(shaderProgram) {
     if (mesh.texture && this.texture !== -1) {
         gl.activeTexture(gl.TEXTURE0);
         gl.bindTexture(gl.TEXTURE_2D, this.texture);
-        gl.uniform1i(gl.getUniformLocation(shaderProgram, "uSampler"), 0);
+        gl.uniform1i(program.samplers[0], 0);
 
     }
 
