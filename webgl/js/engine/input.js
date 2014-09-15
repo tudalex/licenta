@@ -34,7 +34,6 @@ InputControlSystem.prototype.mouseMoveCallback = function(e) {
     if (this.pointerLocked()) {
         var x = e.movementX || e.mozMovementX || e.webkitMovementX;
         var y = e.movementY || e.mozMovementY || e.webkitMovementY;
-        console.log(x, y);
         this.currentInputControl.mouseMoveCallback(x, y);
     }
 };
