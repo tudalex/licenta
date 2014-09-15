@@ -83,7 +83,7 @@ vec4 calcPointLight(
                 vec3 normal,
                 Material mat)
 {
-    vec3 lightDirection = -pointLight.position;
+    vec3 lightDirection = fragEyePos - pointLight.position;
     float distance = length(lightDirection);
     lightDirection = normalize(lightDirection);
 
@@ -101,11 +101,11 @@ vec4 calcPointLight(
 
     attenuation = max(1.0, attenuation);
 
-    return color / attenuation;
+    return color; // / attenuation;
 }
 
 
-vec4 CalcSpotLight(
+vec4 calcSpotLight(
                 SpotLight spotLight,
                 vec3 fragEyePos,
                 vec3 normal,
@@ -123,46 +123,9 @@ vec4 CalcSpotLight(
                                          
         return color * (1.0 - (1.0 - spotFactor) * 1.0/(1.0 - spotLight.cutoff));                   
     }                                                                                       
-    else {                                                                                  
-        return vec4(0);                                                               
-    }                                                                                       
+                                                                                    
+    return vec4(0);                                                                                       
 }  
-
-varying vec2 vRay;
-
-uniform sampler2D uSampler0;
-uniform sampler2D uSampler1;
-uniform sampler2D uSampler2;
-uniform sampler2D uSampler3;
-
-#define textureSampler      uSampler0
-#define depthSampler        uSampler1
-#define depthPrecSampler    uSampler2
-#define normalSampler       uSampler3
-
-uniform mat4 uPmat;
-uniform vec2 resolution;
-
-
-uniform Material uMat;
-uniform DirectionalLight uDirectionalLight;
-uniform PointLight uPointLight;
-uniform SpotLight uSpotLight;
-
-
-
-vec4 packFloatToVec4 (const float value) {
-    vec4 bitSh = vec4 ( 256.0 * 256.0 * 256.0, 256.0 * 256.0, 256.0, 1.0);
-    vec4 bitMask = vec4(0.0, 1.0/256.0, 1.0/256.0, 1.0/256.0);
-    vec4 res = fract(value * bitSh);
-    res -= res.xxyz * bitMask;
-    return res;
-}
-
-float unpackFloatFromVec4 (const vec4 value) {
-    const vec4 bitSh = vec4(1.0/ (256.0 * 256.0 * 256.0), 1.0/(256.0 * 256.0), 1.0/256.0, 1.0);
-    return dot(value, bitSh);
-}
 
 
 float unpack2(const vec2 pack) {
@@ -176,6 +139,32 @@ vec3 decode(vec4 enc) {
     nn.xy *= sqrt(l);
     return nn.xyz * 2.0 + vec3(0, 0, -1);
 }
+
+
+varying vec2 vRay;
+
+uniform sampler2D uSampler0;
+uniform sampler2D uSampler1;
+uniform sampler2D uSampler2;
+uniform sampler2D uSampler3;
+
+#define depthSampler        uSampler1
+#define normalSampler       uSampler3
+#define textureSampler      uSampler0
+#define worldPosSampler     uSampler2
+
+
+
+uniform mat4 uPmat;
+uniform vec2 resolution;
+
+uniform Material uMat;
+uniform DirectionalLight uDirectionalLight;
+uniform PointLight uPointLight;
+uniform SpotLight uSpotLight;
+
+
+
 
 uniform vec3 lightPos;
 
@@ -191,18 +180,35 @@ void main(void) {
     depth = 2.0 * depth - 1.0;
 
     // Invert projection
-    //depth = (depth * uPmat[3][3] - uPmat[3][2]) / (uPmat[2][2] - depth * uPmat[2][3]);
-    depth = -uPmat[3][2] / (uPmat[2][2] + depth);
+    depth = (depth * uPmat[3][3] - uPmat[3][2]) / (uPmat[2][2] - depth * uPmat[2][3]);
+    //depth = -uPmat[3][2] / (uPmat[2][2] + depth);
 
     // Reconstruct eye position
-    vec3 eyePos = vec3(vRay, 1.0) * depth / 50.;
+    vec3 eyePos = vec3(vRay, 1.0) * depth;// / 50.;
 
-    gl_FragColor = vec4(eyePos, 1.0);
+    
 	//gl_FragColor = vec4(1., 1., 1., 1.);
 
     depth = 1. - (-depth - 1.0) / 1000.;
     //gl_FragColor = vec4(vec3(depth), 1.0);
+    
+    vec3 worldPos = texture2D(worldPosSampler, gl_FragCoord.xy / resolution).xyz;
+    //gl_FragColor = vec4(worldPos / 100., 1.); // / 100.;
 
     vec4 texture = vec4(texture2D(textureSampler, gl_FragCoord.xy / resolution));
-	gl_FragColor = texture;
+	gl_FragColor = texture * calcPointLight(uPointLight, eyePos, normal, uMat);
+	//gl_FragColor = texture;
+	gl_FragColor.a = 1.0;
+	
+	//gl_FragColor = vec4(normal, 1.0);
+	
+	//gl_FragColor = vec4(worldPos, 1.0);
+	
+	//gl_FragColor = vec4(eyePos / 50., 1.0);
+	
+	
+	//gl_FragColor = vec4(pow(eyePos - worldPos, vec3(10.)), 1.0);
+	
+	//float dist = length(worldPos - uPointLight.position);
+	//gl_FragColor = vec4(vec3(dist) / 100., 1.0);
 }

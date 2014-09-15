@@ -22,13 +22,12 @@
     <!-- Engine -->
     <script type="application/javascript" src="js/engine/utils.js"></script>
     <script type="application/javascript" src="js/engine/timer.js"></script>
-
     <script type="application/javascript" src="js/engine/physics.js"></script>
-
     <script type="application/javascript" src="js/engine/resource.js"></script>
     <script type="application/javascript" src="js/engine/primitives.js"></script>
     <script type="application/javascript" src="js/engine/camera.js"></script>
     <script type="application/javascript" src="js/engine/lightVolumes.js"></script>
+    <script type="application/javascript" src="js/engine/uniformFactories.js"></script>
     <script type="application/javascript" src="js/engine/renderer.js"></script>
     <script type="application/javascript" src="js/engine/input.js"></script>
     <script type="application/javascript" src="js/engine/engine.js"></script>
@@ -49,11 +48,11 @@
             var scene = new Scene(engine.renderer.gl);
             var img = loadImage("tex.jpg");
 
-            var ground = ObjectFactory.getBox(img, engine.manager, [50, 3, 50]);
+            var ground = ObjectFactory.getBox(img, engine.manager, [200, 3, 200]);
             ground.setPosition(vec3.fromValues(0, 0, 0));
             ground.initPhysics(engine.physics, 0);
             scene.addObject(ground);
-            var i, n = 200, boxes = [], box;
+            var i, n = 20, boxes = [], box;
             for (i = 0; i < n; ++i) {
                 box = ObjectFactory.getBox(img, engine.manager, [3, 3, 3]);
                 box.setPosition(vec3.fromValues(Math.random() *10 - 5 , i * 5 + 10, Math.random() *10 - 5));
@@ -63,7 +62,7 @@
             window.setTimeout(function() {
                 var i;
                 for (i = 0; i < boxes.length; ++ i) {
-                    boxes[i].initPhysics(engine.physics);
+                    //boxes[i].initPhysics(engine.physics);
                 }
             }, 2000);
 

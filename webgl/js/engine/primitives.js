@@ -196,6 +196,10 @@ ObjectFactory.getBox = function(img, manager, size) {
         20, 21, 22,     20, 22, 23    // left
     ];
 
+    for (var i = 6; i < mesh.indexes.length; ++i) {
+        //mesh.indexes[i] = 0;
+    }
+
     mesh.uv = [
         // Front
         0.0,  0.0,
@@ -255,6 +259,13 @@ ObjectFactory.computeNormals = function(mesh) {
         vec3.subtract(ac, v[2], v[0]);
         vec3.cross(normal, ab, ac);
         vec3.normalize(normal, normal);
+
+        console.log(normal);
+
+        //normal[0] = 1;
+        //normal[1] = 0;
+        //normal[2] = 0;
+
         for (j = 0; j < 3; ++j) {
             for (k = 0; k < 3; ++k) {
                 mesh.normal.push(normal[k]);
