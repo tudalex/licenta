@@ -13,9 +13,7 @@ function InputControlSystem(elementId) {
     this.initKeyboard();
     //this.initMouseLock();
     canvas.addEventListener('mousedown', function(e) {
-        console.log(e.which);
         if (!this.pointerLocked() && e.which === 3) {
-            console.log("right click");
             canvas.requestPointerLock();
         }
     }.bind(this));
