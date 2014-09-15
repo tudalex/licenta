@@ -14,22 +14,17 @@ Physics.prototype.init = function() {
     this.overlappingPairCache = new Ammo.btDbvtBroadphase();
     this.solver = new Ammo.btSequentialImpulseConstraintSolver();
     this.dynamicsWorld = new Ammo.btDiscreteDynamicsWorld(this.dispatcher, this.overlappingPairCache, this.solver, this.collisionConfiguration);
-    this.dynamicsWorld.setGravity(new Ammo.btVector3(0, -10, 0));
+    this.dynamicsWorld.setGravity(new Ammo.btVector3(0, -20, 0));
 
     this.bodies = [];
-    this.ground = this.createBody(0, new Ammo.btVector3(0, -50, 0), new Ammo.btBoxShape(new Ammo.btVector3(1000, 1, 1000)));
-    //this.bodies = [];
-    //his.createBody(0, new Ammo.btVector3(0, -100, 0), Ammo.btStaticPlaneShape(new Ammo.btVector3(0, 1, 0), 1));
-    // Testing stuff
-    this.setUpTest();
+
     this.timer = new RealTimeTimer();
     this.pstep = this.timer.getTotal();
 };
 
 Physics.prototype.setUpTest = function() {
     window.dynamicsWorld = this.dynamicsWorld;
-    window.body = this.createBody(1, new Ammo.btVector3(0, 100, 0), new Ammo.btBoxShape(new Ammo.btVector3(1000, 1, 1000)));
-   // Ammo.btBvhTriangleMeshShape
+    //window.body = this.createBody(1, new Ammo.btVector3(0, 100, 0), new Ammo.btBoxShape(new Ammo.btVector3(1000, 1, 1000)));
 
 };
 
@@ -83,9 +78,6 @@ Physics.prototype.decomposeMatrix = function (m) {
         v1[0] = -v1[0];
         v1[1] = -v1[1];
         v1[2] = -v1[2];
-//        m[0] = -m[0];
-//        m[1] = -m[1];
-//        m[2] = -m[2];
     }
     vec3.normalize(v1, v1);
     vec3.normalize(v2, v2);
@@ -130,8 +122,8 @@ Physics.prototype.step = function() {
     var cstep = this.timer.getTotal();
     var delta = (this.pstep - cstep) / 1000;
     this.pstep = cstep;
-
-    this.dynamicsWorld.stepSimulation(delta, 10);
+    var internalTimeStep = 1.0/240.0;
+    this.dynamicsWorld.stepSimulation(delta, 10, internalTimeStep);
 //        _.map(bodies, this.readObjectPosition);
 
 

@@ -10,7 +10,7 @@ In this chapter I’m going to introduce a few game programming concepts.
 The smallest three dimensional primitive available, any polygon can be split into triangles. GPUs work by rendering triangles, they are the basic unit which they process. Another advantage of a triangle is that it is always planar; this is only true for triangles, any polygon with more than three vertices can have its fourth vertex not in the same plane as defined by the first three. No matter what transformation you apply to a triangle it will remain a triangle, at most you can get an edge case in which it is a single line.
 The last advantage, as mentioned in the GameEngineArhitecture (from reference \cite{gregory09}), it is the basic shape that all 3D accelerators render and it has been used in the gaming industry even from the first 3D games like Castle Wolfenstein and Doom.
 
-Triangles can be given to the GPU in many ways. Each triangle must be defined by three points in space, its vertices.
+Triangles can be given to the GPU in many ways. Each triangle must be defined by three points in space: its vertices.
 
 \subsubsection{Winding Order}
 
@@ -31,7 +31,7 @@ There are multiple ways of specifying triangles to the GPU. Here are four ways i
 
 \begin{easylist}[itemize]
 & Triangle Lists - The most simple way of specifying triangles for the videocard to render is by using a triangle list. This is a list of points, each three points making a triangle with the winding order in the order in which they are specified.
-& Indexed Triangle Lists -  If a object shares points with multiple triangles it is easier to specify a list o points and another list of indexes for the order in which the points form triangles.
+& Indexed Triangle Lists -  If a object shares points with multiple triangles it is easier to specify a list of points and another list of indexes for the order in which the points form triangles.
 & Triangle Strips - These can be used for rendering a triangle strip in which a point always forms a triangle with the previous two points. These specialized structures can be used to efficiently store a mesh, since it doesn’t require repeating vertices and also it doesn’t need a index buffer.
 & Triangle Fans - Triangle fans are similar to strips, just that they make a triangle with the first vertice in the fan and the last one.
 \end{easylist}
@@ -120,7 +120,7 @@ Where $s$ is the scaling factor, because the last coordinate can be viewed as th
 
 \section{Rendering pipeline}
 
-WebGL’s rendering pipeline is the same as OpenGL ES 2.0’s since the specification was made after it. As can be seen from the figure ~\ref{img:opengles1}, the pipeline figures just two programmable points the Vertex Shader and the Fragment Shader. All the others are fixed hardware operations. \footnote{http://www.khronos.org/api/opengles/2\_X}
+WebGL’s rendering pipeline is the same as OpenGL ES 2.0’s since the specification was made after it. As can be seen from the figure ~\ref{img:opengles1}, the pipeline figures just two programmable points: the Vertex Shader and the Fragment Shader. All the others are fixed hardware operations. \footnote{http://www.khronos.org/api/opengles/2\_X}
 
  \begin{center}
 	\begin{figure}[here]
@@ -135,13 +135,13 @@ WebGL’s rendering pipeline is the same as OpenGL ES 2.0’s since the specific
 
 \subsection{Forward rendering}
 
-Forward rendering is the default type of rendering. In forward rendering meshes are rendered on the GPU in the order in which they are sent. Special care must be taken when rendering transparent materials, as these must be rendered at the end. The forward renderer 
+Forward rendering is the default type of rendering. In forward rendering, meshes are rendered on the GPU in the order in which they are sent. Special care must be taken when rendering transparent materials, as these must be rendered at the end. The forward renderer 
 
 \subsection{Deferred Rendering}
 
-With the advances in OpenGL ES 2.0 and the porting of these improvements to WebGL specific extensions, advanced rendering technique (that were previously only used in desktop based implementations) became available.(from reference \cite{engel14}) This chapter presents advances in deferred rendering using OpenGL ES 2 and how to adapt them for working on WebGL. 
+With the advances in OpenGL ES 2.0 and the porting of these improvements to WebGL specific extensions, advanced rendering technique (that were previously only used in desktop based implementations) became available (from reference \cite{engel14}). This chapter presents advances in deferred rendering using OpenGL ES 2 and how to adapt them for working on WebGL. 
 
-There are 3 main deferred rendering techniques used in the industry. The first one is deferred rendering, as presented by Nvidia and implemented in S.T.A.L.K.E.R. Engine. The second technique is Light Indexed Rendering, used in engines like DOOM 3 engine; \cite{trebilco07} it is an approach which permits the use of forward rendering while doing a precalculation of lighting information.
+There are 3 main deferred rendering techniques used in the industry. The first one is deferred rendering, as presented by Nvidia and implemented in S.T.A.L.K.E.R. Engine. The second technique is Light Indexed Rendering, used in engines like DOOM 3 engine \cite{trebilco07}; it is an approach which permits the use of forward rendering while doing a precalculation of lighting information.
 
 The last and most modern approach is known as light pre-pass rendering or deferred lighting. It was first introduced by Wolfgang Engel (\cite{engel08}) and it is an approach more appropriate for modern GPUs, which don’t lack the compute power but lack the memory bandwidth, solving the problem of materials in deferred rendering.
 
@@ -149,8 +149,7 @@ The last and most modern approach is known as light pre-pass rendering or deferr
 
 Deferred rendering is based on rendering the scene and saving in a frame buffer all the information necessary for calculating lighting. The name “deferred” comes from the fact that no shading is calculated in the first pass, it is “deferred” to the second pass. Position, normals, ambient light and materials for each surface are rendered into the geometry buffer (G-buffer) as a series of textures. After these textures are rendered, a new pass renders the lights as various shapes (cones for spotlight and spheres for point lights) and together with the information contained in the G-Buffer, renders the scene. The only major problem is that material information must also be stored in the G-Buffer, this making the G-Buffer increase in size a lot. This was not practical for last gen consoles, so a different rendering method was necessary, as seen in ~\ref{img:deferred2}.
 \begin{center}
-\begin{figure}[here]
-	
+\begin{figure}[h!]
 \includegraphics[width=\textwidth]{src/img/deferred2.png}
 \caption{Deferred rendering using a G-Buffer}
 \label{img:deferred2}
@@ -160,8 +159,7 @@ Deferred rendering is based on rendering the scene and saving in a frame buffer 
 An example of a G-Buffer taken from the presentation of the Killzone 2 engine can be seen in figure ~\ref{img:deferred1}.
 
 \begin{center}
-	\begin{figure}[here]
-		
+	\begin{figure}[here!]
 		\includegraphics[width=\textwidth]{src/img/deferred1.png}
 		\caption{G-Buffer from Killzone 2 engine}
 		\label{img:deferred1}
@@ -196,12 +194,12 @@ The major advantage of this rendering method is that this is only forward render
 
 \subsection{Assimp}
 
-Open Asset Import Library (assimp) is an open source library that imports 41 types of assets and offers a common API for accessing them. It is licensed under BSD license, thus making it easily usable in commercial products. The library also does post processing by computing normals and tangent vectors when they are not available in the format, or by loading native textures from the format. There isn’t a port of this library to JavaScript but there is another project named assimp2json that outputs a json format of the files. This json has the same format as the API offered by assimp to other programming languages like C/C++, C\#/.net, Python and D.  Assimp can be used either offline in the asset conditioning pipeline or at runtime in the resource manager.
+Open Asset Import Library (assimp) is an open source library that imports 41 types of assets and offers a common API for accessing them. It is licensed under BSD license (Berkeley Software Distribution), thus making it easily usable in commercial products. The library also does post processing by computing normals and tangent vectors when they are not available in the format, or by loading native textures from the format. There isn’t a port of this library to JavaScript but there is another project named assimp2json that outputs a json format of the files. This json has the same format as the API offered by assimp to other programming languages like C/C++, C\#/.net, Python and D.  Assimp can be used either offline in the asset conditioning pipeline or at runtime in the resource manager.
 
 \subsection{Runtime Resource Management}
 
 Different engines use different resource managers at runtime. These resource managers work tightly with the asset pipeline used to produce the resource files.
-The most simple resource manager will load resources from a folder on disk. Each resource will be identified by their relative path. One problem is that usually operating systems inquire a cost of accessing a file on disk. Other engines will pack together assets and use a virtual filesystem for accessing the files. For example, in Game Engine Architecture the author gives as an example the Ogre3D engine which uses a large zip archive to store the contents of the game.
+The most simple resource manager will load resources from a folder on disk. Each resource will be identified by their relative path. One problem is that usually operating systems inquire a cost of accessing a file on disk. Other engines will pack together assets and use a virtual filesystem for accessing the files. For example, in Game Engine Architecture \cite{gregory09} the author gives as an example the Ogre3D engine which uses a large zip archive to store the contents of the game.
 
 
 

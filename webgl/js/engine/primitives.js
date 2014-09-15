@@ -38,6 +38,7 @@ function SceneObject(mesh, manager) {
     this.physicsBody = undefined;
     this.mMat = mat4.create();
     this.texture = -1;
+    this.shape = undefined;
 }
 
 SceneObject.prototype.updateModelMat = function() {
@@ -47,6 +48,7 @@ SceneObject.prototype.updateModelMat = function() {
         this.rotation = ret[1];
     }
     mat4.fromRotationTranslation(this.mMat, this.rotation, this.position);
+    mat4.scale(this.mMat, this.mMat, this.scale);
 };
 
 SceneObject.prototype.setPosition = function(newPosition) {
@@ -59,11 +61,27 @@ SceneObject.prototype.setRotation = function(newRotation) {
     this.rotation = newRotation;
 };
 
-SceneObject.prototype.initPhysics = function (physics, shape) {
+SceneObject.prototype.setScale = function(newScale) {
     "use strict";
+    this.scale = newScale;
+};
+SceneObject.prototype.setShape = function(newShape) {
+    "use strict";
+    if (this.shape !== undefined) {
+        Ammo.destroy(this.shape);
+    }
+    this.shape = newShape;
+};
+
+SceneObject.prototype.initPhysics = function (physics, mass) {
+    "use strict";
+    if (mass === undefined) {
+        mass = 1;
+    }
     this.physics = physics;
     var p = this.position;
-    this.physicsBody = physics.createBody(1, new Ammo.btVector3(p[0], p[1], p[2]), shape);
+    this.shape.setLocalScaling(new Ammo.btVector3(this.scale[0], this.scale[1], this.scale[2]));
+    this.physicsBody = physics.createBody(mass, new Ammo.btVector3(p[0], p[1], p[2]), this.shape);
 };
 
 SceneObject.prototype.initGl = function(gl) {
@@ -126,9 +144,12 @@ SceneObject.prototype.draw = function(shaderProgram) {
 };
 
 var ObjectFactory = {}; //jshint ignore:line
-ObjectFactory.getBox = function(img, manager) {
+ObjectFactory.getBox = function(img, manager, size) {
     "use strict";
     var mesh = {};
+    if (size === undefined) {
+        size = [1, 1, 1];
+    }
     mesh.vertices = [
         // Front face
         -1.0, -1.0,  1.0,
@@ -212,7 +233,10 @@ ObjectFactory.getBox = function(img, manager) {
         mesh.texture = img;
     }
     ObjectFactory.computeNormals(mesh);
-    return new SceneObject(mesh, manager);
+    var ret = new SceneObject(mesh, manager);
+    ret.setScale(new Float32Array(size));
+    ret.setShape(new Ammo.btBoxShape(new Ammo.btVector3(1, 1, 1)));
+    return ret;
 };
 
 ObjectFactory.computeNormals = function(mesh) {

@@ -2,8 +2,6 @@
 \label{chapter:Chapter 2}
 
 
-
-
 \section{Rendering Engines}
 \subsection {Three JS}
 
@@ -29,18 +27,19 @@ PhysiJS is a physics plugin for ThreeJS that exports an object API and in the ba
 
 \subsection{Unity 3D}
 
-A popular engine in the indie games community Unity 3D announced at GDC (Game Developers Conference) that Unity 5 will have support for exporting games to WebGL. (from reference \cite{echterhoff14}) They are using the Emscripten compiler toolchain in order to cross compile their game engine to JavaScript. In order to compile the .NET game code (the C\# or UnityScript scripts used) into JavaScript, they developed their own technology named IL2CPP.  IL2CPP takes .NET bytecode and converts it to corresponding C++ source files. The generated C++ source code is then compiled into JavaScript using the Emscripten toolchain.
+A popular engine in the indie games community, Unity 3D, announced at GDC (Game Developers Conference) that Unity 5 will have support for exporting games to WebGL (from reference \cite{echterhoff14}). They are using the Emscripten compiler toolchain in order to cross compile their game engine to JavaScript. In order to compile the .NET game code (the C\# or UnityScript scripts used) into JavaScript, they developed their own technology named IL2CPP.  
+IL2CPP takes .NET bytecode and converts it to corresponding C++ source files. The generated C++ source code is then compiled into JavaScript using the Emscripten toolchain.
 Their port will have some features which are not available, like: networking support, support for WebCam and Microphone, hardware cursor support, script debugging, threads and any .NET features that require dynamic code generation.
-Some of these stand out, because there is no technological reason for them not to be supported. For example, Microphone and WebCam support can easily be integrated into the engine using the getUserMedia API. (from reference \cite{bidelman12}) Also as networking support goes, although they said HTTP access will be there, we see that they don’t plan on support P2P connections through WebRTC.
+Some of these stand out, because there is no technological reason for them not to be supported. For example, Microphone and WebCam support can easily be integrated into the engine using the getUserMedia API (from reference \cite{bidelman12}). Also as networking support goes, although they said HTTP access will be there, we see that they don’t plan on support P2P (peer-to-peer) connections through WebRTC (Web Real-Time Communication).
 
 \subsection{Unreal Engine 3}
 
-Unreal partnered with Mozilla in order to release Unreal Engine 3’s Epic Citadel Demo using WebGL and HTML5 technologies. (from reference \cite{unrealengine13}). The demo, Epic Citadel demos most of the features present in the mobile version of the engine, like: realistic reflections and animations, global illumination and dynamic specular. It was ported with help from Mozilla by using Emscripten to WebGL. They managed to port it to WebGL in just four days. The technologies demoed in lighting with texture maps. They later announced that they are working with Mozilla in order to port their new engine Unreal Engine 4 to the web using the same technologies. (from reference \cite{lardinois14}) Their plan is to offer HTML5 as a platform for game deployment in the new engine.
+Unreal partnered with Mozilla in order to release Unreal Engine 3’s Epic Citadel Demo using WebGL and HTML5 technologies (from reference \cite{unrealengine13}). The demo, Epic Citadel demos most of the features present in the mobile version of the engine, like: realistic reflections and animations, global illumination and dynamic specular. It was ported with help from Mozilla by using Emscripten to WebGL. They managed to port it to WebGL in just four days. The technologies demoed in lighting with texture maps. They later announced that they are working with Mozilla in order to port their new engine Unreal Engine 4 to the web using the same technologies (from reference \cite{lardinois14}). Their plan is to offer HTML5 as a platform for game deployment in the new engine.
 
 \subsection{Unigine}
 
 Unigine is a proprietary cross-platform game engine, developed by Unigine Corp. The engine is famous as being part of the Phoronix Test Suite as a benchmark, on Linux and other systems. 
-The Unigine engine was ported to WebGL by ACTISKU, a company that develops 3D marketing solutions using the UNIGINE Engine using the full source of the UNIGINE SDK. Although this port exists, there is no official support for it from UNIGINE.(from referene \cite{unigine13})
+The Unigine engine was ported to WebGL by ACTISKU, a company that develops 3D marketing solutions using the UNIGINE Engine using the full source of the UNIGINE SDK. Although this port exists, there is no official support for it from UNIGINE (from reference \cite{unigine13}).
 
 \subsection{CryEngine}
 
@@ -54,7 +53,7 @@ Godot is a open source game engine created by OKAM studio. It features 2D and 3D
 
 \subsection{Bullet Physics}
 
-Bullet Physics is a popular physics engine which is Open Source. It is widely used in the industry in triple A games like: Grand Theft Auto IV, Grand Theft Auto V, Red Dead Redemption, DiRT, etc, and also used in movies like 2012, Hancock, Bolt, The A-Team, Sherlock Holmes, Megamind and Shrek 4. It has been ported to every platform out there: Xbox 360, PlayStation 3, iOS, Android, Wii, Linux, Windows and OS X. It is optimized for PS3 SPU, CUDA and OpenCL in order to accelerate the physics simulation.
+Bullet Physics is a popular physics engine which is Open Source. It is widely used in the industry in triple A games like: Grand Theft Auto IV, Grand Theft Auto V, Red Dead Redemption, DiRT, etc, and also used in movies like 2012, Hancock, Bolt, The A-Team, Sherlock Holmes, Megamind and Shrek 4. It has been ported to every platform out there: Xbox 360, PlayStation 3, iOS, Android, Wii, Linux, Windows and OS X. It is optimized for: PS3 SPU, CUDA and OpenCL in order to accelerate the physics simulation.
 
 \subsection{AmmoJS}
 
@@ -66,7 +65,7 @@ Havok Physics is a physics engine that has been used in over 500 games. It is ea
 
 \subsection{PhysX}
 
-PhysX is a physics engine developed by Nvidia which uses GPGPU in order to accelerate physics simulations. It is ported to all the available consoles and platforms. It is not ported to the web because of the lack of support for GPGPU computations from inside a HTML5 page.
+PhysX is a physics engine developed by Nvidia which uses GPGPU (General-purpose computing on graphics processing units) in order to accelerate physics simulations. It is ported to all the available consoles and platforms. It is not ported to the web because of the lack of support for GPGPU computations from inside a HTML5 page.
 
 \section{Input Control}
 
@@ -82,11 +81,11 @@ For desktop platforms there are different frameworks that offer a callback based
 
 \subsection{Lua}
 
-Lua is a scripting language used in multiple game engines (Irrlicht, CryENGINE). Lua is garbage collected compiled language. Similar to Java it needs a VM (Virtual Machine) to interpret the bytecode. LuaJIT is a Lua VM with a JIT that speeds up Lua execution.
+Lua is a scripting language used in multiple game engines (Irrlicht, CryENGINE). Lua is garbage collected compiled language. Similar to Java it needs a VM (Virtual Machine) to interpret the bytecode. LuaJIT is a Lua VM with a JIT (Just In Time) that speeds up Lua execution.
 
 \subsection{C++}
 
-C++ scripting is done by compiling the scripts into dynamic libraries that are then linked at runtime and have methods out of them called. This is the most efficient way of linking to scripts since there is no VM, no garbage collection and no bindings. The only caveat is that it requires recompiling for each modification for each platform and do platform specific optimizations on code.
+C++ scripting is done by compiling the scripts into dynamic libraries that are then linked at runtime and have methods out of them called. This is the most efficient way of linking to scripts since there is no VM, no garbage collection and no bindings. The only caveat is that it requires recompiling for each modification, for each platform and do platform specific optimizations on code.
 	
 
 
