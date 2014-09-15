@@ -31,6 +31,14 @@ AssimpScene.prototype.init = function() {
         mesh.normalBuffer = gl.createBuffer();
         gl.bindBuffer(gl.ARRAY_BUFFER, mesh.normalBuffer);
         gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(mesh.normals), gl.STATIC_DRAW);
+
+        mesh.uvBuffer = gl.createBuffer();
+        gl.bindBuffer(gl.ARRAY_BUFFER, mesh.uvBuffer);
+        if (mesh.texturecoors) {
+            gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(mesh.texturecoords[0]), gl.STATIC_DRAW);
+        } else {
+            gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(mesh.vertices.length / 3 * 2), gl.STATIC_DRAW);
+        }
     }
 
     for (i = 0; i < this.data.materials.length; ++i) {
@@ -59,8 +67,14 @@ AssimpScene.prototype.drawMesh = function(idx, shaderProgram) {
     gl.bindBuffer(gl.ARRAY_BUFFER, mesh.normalBuffer);
     gl.vertexAttribPointer(shaderProgram.normalAttrib, 3, gl.FLOAT, false, 0, 0);
 
+    gl.bindBuffer(gl.ARRAY_BUFFER, mesh.uvBuffer);
+    gl.vertexAttribPointer(shaderProgram.texAttrib, 2, gl.FLOAT, false, 0, 0);
+
     gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, mesh.indexBuffer);
     gl.drawElements(gl.TRIANGLES, mesh.indexes.length, gl.UNSIGNED_SHORT, 0);
+
+
+
     this.timer.stop(0);
 };
 
@@ -161,7 +175,7 @@ Renderer.prototype.initGL = function(canvas) {
             WebGLDebugUtils.glFunctionArgsToString(functionName, args) + ")");
     }
 
-    this.gl = this.rawgl;
+    this.gl = this.rawgl;//.rawgl;
 //    this.gl = WebGLDebugUtils.makeDebugContext(this.rawgl, undefined, logGLCall);
 //    this.gl = WebGLDebugUtils.makeDebugContext(this.rawgl);
 
@@ -171,6 +185,10 @@ Renderer.prototype.initGL = function(canvas) {
     this.extFloat = this.gl.getExtension("OES_texture_float");
     this.extFloatLinear = this.gl.getExtension("OES_texture_float_linear");
 
+    createGlUniformObjectFactories(this.gl);
+
+    this.gl.enable(this.gl.CULL_FACE);
+    this.gl.cullFace(this.gl.BACK);
     window.gl = this.gl;
     return this.gl;
 };
@@ -288,13 +306,40 @@ Renderer.prototype.loadLightPassProg = function() {
             gl.enableVertexAttribArray(program.rayAttrib);
 
             program.pMatUniform = gl.getUniformLocation(program, "uPmat");
-            program.resolutionUniform = gl.getUniformLocation(program, "resolution");
+            program.resUniform = gl.getUniformLocation(program, "resolution");
 
             program.samplers = _.range(4).map(function(i) {
                 return gl.getUniformLocation(program, "uSampler" + i);
             });
 
             this.lightPassProg = program;
+
+            var lightFactory = PointLightFactory(gl, program, 'uPointLight');
+            var materialFactory = MaterialFactory(gl, program, 'uMat');
+
+            var props = {
+                uPointLight: {
+                    position: [ 0, 1000, -50 ],
+                    base: {
+                        color: [ 1, 0, 0 ],
+                        ambientIntensity: 0.2,
+                        diffuseIntensity: 0.9
+                    },
+                    atten: {
+                        constant: 0,
+                        linear: 0,
+                        exp: 0.3
+                    }
+                },
+                uMat: {
+                    specularIntensity: 0.5,
+                    specularPower: 40
+                }
+            };
+
+            this.testPointLight = new lightFactory(props);
+            this.testMat = new materialFactory(props);
+
             return program;
         });
 };
@@ -335,7 +380,7 @@ Renderer.prototype.setMatrixUniform = function() {
     gl.uniformMatrix4fv(this.shaderProgram.pMatUniform, false, this.pMat);
     gl.uniformMatrix4fv(this.shaderProgram.mMatUniform, false, this.mMat);
     gl.uniformMatrix4fv(this.shaderProgram.vMatUniform, false, this.vMat);
-    gl.uniform2fv(this.shaderProgram.resolutionUniform, [gl.canvas.width, gl.canvas.height]);
+    gl.uniform2fv(this.shaderProgram.resUniform, [gl.canvas.width, gl.canvas.height]);
 };
 
 
@@ -471,7 +516,7 @@ Renderer.prototype.initLightVolumes = function() {
             vertexBuffer: vertBuff,
             indexBuffer: indBuff,
             indexLength: mesh.indices.length
-        }
+        };
     }
 };
 
@@ -545,6 +590,19 @@ Renderer.prototype.drawScene = function() {
     });
 
     this.setMatrixUniform();
+
+
+    var worldpos = this.testPointLight.position.val;
+    var origpos = vec3.clone(worldpos);
+    vec3.transformMat4(worldpos, worldpos, this.vMat);
+
+    this.testPointLight.upload();
+    vec3.copy(worldpos, origpos);
+
+
+    this.testMat.upload();
+
+
     this.drawFullScreenQuad();
 
     this.shaderProgram = this.nullPassProg;
