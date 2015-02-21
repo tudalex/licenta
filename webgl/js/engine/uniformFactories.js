@@ -5,7 +5,8 @@ function createGlUniformObjectFactories(gl) {
         path = path ? path + '.' + name : name;
 
 
-        console.log('binding on ' + path);
+        //console.log('binding on ' + path);
+
         var loc = gl.getUniformLocation(program, path);
         if (loc == -1) {
             console.error('getUniformLocation failed for ' + path);
